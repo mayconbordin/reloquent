@@ -52,7 +52,7 @@ class BaseRepositoryTest extends Test
     {
         Illuminate\Support\Facades\Config::shouldReceive('get')->with('reloquent.pagination.per_page', m::any())->andReturn(15);
         Illuminate\Support\Facades\Config::shouldReceive('get')->with('reloquent.limit', m::any())->andReturn(20);
-        Illuminate\Support\Facades\Config::shouldReceive('get')->with('reloquent.debug', m::any())->andReturn(true);
+        Illuminate\Support\Facades\Config::shouldReceive('get')->with('reloquent.debug', m::any())->andReturn(false);
 
         $this->model     = m::mock('\TestModel');
         $this->validator = m::mock('Illuminate\Validation\Factory');
@@ -143,6 +143,58 @@ class BaseRepositoryTest extends Test
 
 
         $this->repository->findAllByTypeOrderByName($type);
+    }
+
+    public function testFindAllByTypeWith()
+    {
+        $type = "test";
+
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $query = m::mock('Illuminate\Database\Eloquent\Builder');
+        $query->shouldReceive('with')->with(['childs'])->once()->andReturnSelf();
+        $query->shouldReceive('where')->with('type', '=', $type)->once();
+        //$query->shouldReceive('orderBy')->with('name', 'asc')->once();
+        $query->shouldReceive('get')->once()->andReturn($results);
+
+        $this->model->shouldReceive('newQuery')->once()->andReturn($query);
+
+        $this->repository->findAllByTypeWith($type, ['childs']);
+    }
+
+    public function testFindAllByTypeOrderByWith()
+    {
+        $type = "test";
+
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $query = m::mock('Illuminate\Database\Eloquent\Builder');
+        $query->shouldReceive('with')->with(['childs'])->once()->andReturnSelf();
+        $query->shouldReceive('where')->with('type', '=', $type)->once();
+        $query->shouldReceive('orderBy')->with('name', 'asc')->once();
+        $query->shouldReceive('get')->once()->andReturn($results);
+
+        $this->model->shouldReceive('newQuery')->once()->andReturn($query);
+
+        $this->repository->findAllByTypeOrderByNameWith($type, ['childs']);
+    }
+
+    public function testFindAllByTypeOrderByLimitWith()
+    {
+        $type = "test";
+
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $query = m::mock('Illuminate\Database\Eloquent\Builder');
+        $query->shouldReceive('with')->with(['childs'])->once()->andReturnSelf();
+        $query->shouldReceive('where')->with('type', '=', $type)->once();
+        $query->shouldReceive('orderBy')->with('name', 'asc')->once();
+        $query->shouldReceive('limit')->with(10)->once();
+        $query->shouldReceive('get')->once()->andReturn($results);
+
+        $this->model->shouldReceive('newQuery')->once()->andReturn($query);
+
+        $this->repository->findAllByTypeOrderByNameLimit_With($type, 10, ['childs']);
     }
 
     public function testFindAllByTypeOrderByLimit()

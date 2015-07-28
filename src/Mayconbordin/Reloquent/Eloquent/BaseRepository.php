@@ -580,9 +580,13 @@ abstract class BaseRepository implements BaseRepositoryContract
      *
      * @return Builder
      */
-    public function createQuery(array $where, $orderBy = [], $limit = null, $operator = '=')
+    public function createQuery(array $where, $orderBy = [], $limit = null, $with = null, $operator = '=')
     {
         $query = $this->model->newQuery();
+
+        if ($with != null) {
+            $query->with($with);
+        }
 
         foreach ($where as $field => $value) {
             if (is_array($value) && sizeof($value) == 3) {
@@ -635,6 +639,7 @@ abstract class BaseRepository implements BaseRepositoryContract
         $orderBy  = [];
         $limit    = null;
         $paginate = null;
+        $with     = null;
 
         for ($i=0, $j=0; $i<sizeof($operators); $i++) {
             if (in_array($operators[$i], ['and', 'or']))
@@ -674,19 +679,24 @@ abstract class BaseRepository implements BaseRepositoryContract
             {
                 $paginate = isset($parameters[$j]) ? $parameters[$j++] : $this->perPage();
             }
+
+            else if (in_array($operators[$i], ['with']))
+            {
+                $with = isset($parameters[$j]) ? $parameters[$j++] : (isset($this->relations) ? $this->relations : null);
+            }
         }
 
         if ($resultType == self::RESULT_SINGLE)
         {
-            return $this->createQuery($where, $orderBy, $limit)->first();
+            return $this->createQuery($where, $orderBy, $limit, $with)->first();
         }
 
         else if ($resultType == self::RESULT_ALL)
         {
             if ($paginate == null) {
-                return $this->createQuery($where, $orderBy, $limit)->get();
+                return $this->createQuery($where, $orderBy, $limit, $with)->get();
             } else {
-                return $this->createQuery($where, $orderBy, $limit)->paginate($paginate);
+                return $this->createQuery($where, $orderBy, $limit, $with)->paginate($paginate);
             }
         }
 
@@ -703,22 +713,26 @@ abstract class BaseRepository implements BaseRepositoryContract
      */
     public function __call($method, $parameters)
     {
-        if (!preg_match('/^(find)(AllBy|By)?(.*)(Limit|OrderByDesc|OrderBy|Paginated)?$/i', $method, $matches)) {
+        if (!preg_match('/^(find)(AllBy|By)?(.*)(Limit|OrderByDesc|OrderBy|Paginated|With)?$/i', $method, $matches)) {
             throw new RepositoryException("Method name $method is not valid");
         }
 
-        preg_match_all('/(Limit|OrderByDesc|OrderBy|Paginated|And|Or|In)+/', $matches[3], $parts);
+        preg_match_all('/(Limit|OrderByDesc|OrderBy|Paginated|With|And|Or|In)+/', $matches[3], $parts);
 
         $partsSize = sizeof($parts[0]);
-        if (array_search('Limit', $parts[0]) !== false) $partsSize--;
-        if (array_search('Paginated', $parts[0]) !== false) $partsSize--;
+        foreach (['Limit', 'Paginated', 'With'] as $op) {
+            if (array_search($op, $parts[0]) !== false)
+                $partsSize--;
+        }
+        //if (array_search('Limit', $parts[0]) !== false) $partsSize--;
+        //if (array_search('Paginated', $parts[0]) !== false) $partsSize--;
 
         $action = $matches[1] . $matches[2];
         $fields = $this->parseFields($matches[3]);
 
         $operators = array_map('strtolower', ((sizeof($fields) > $partsSize) ? array_merge(['And'], $parts[0]) : $parts[0]));
 
-        $this->debug(['action' => $action, 'fields' => $fields, 'operators' => $operators, 'parameters' => $parameters, 'matches' => $matches]);
+        $this->debug(['action' => $action, 'fields' => $fields, 'operators' => $operators, 'parameters' => $parameters, 'matches' => $matches, 'parts' => $parts]);
 
         switch ($action) {
             case 'findAllBy':
@@ -745,10 +759,10 @@ abstract class BaseRepository implements BaseRepositoryContract
 
     protected function parseFields($fieldsStr)
     {
-        $items = preg_split('/(Limit|OrderByDesc|OrderBy|Paginated|And|Or|In)/', $fieldsStr);
+        $items = preg_split('/(Limit|OrderByDesc|OrderBy|Paginated|With|And|Or|In)/', $fieldsStr);
 
         $fields = array_filter(array_map(function($item) {
-            return strtolower(trim(preg_replace("/(Limit|OrderByDesc|OrderBy|Paginated|And|Or|In)+/", "", preg_replace("/[A-Z]/", "_$0", $item)), '_'));
+            return strtolower(trim(preg_replace("/(Limit|OrderByDesc|OrderBy|Paginated|With|And|Or|In)+/", "", preg_replace("/[A-Z]/", "_$0", $item)), '_'));
         }, $items), function($item) {
             return ($item != null && strlen($item) > 0);
         });
