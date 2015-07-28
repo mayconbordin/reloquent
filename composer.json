@@ -1,0 +1,29 @@
+{
+    "name": "mayconbordin/reloquent",
+    "description": "Repository data layer for Laravel 5",
+    "keywords": ["laravel", "repository", "eloquent", "laravel 5", "database"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Maycon Viana Bordin",
+            "email": "mayconbordin@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "illuminate/support": "5.0.x|5.1.x",
+        "illuminate/database": "5.0.x|5.1.x",
+        "illuminate/validation": "5.0.x|5.1.x"
+    },
+    "require-dev": {
+      "codeception/codeception": "2.*",
+      "codeception/mockery-module": "*",
+      "codeception/aspect-mock": "*",
+      "symfony/var-dumper": "~2.7.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Mayconbordin\\Reloquent\\": "src/Mayconbordin/Reloquent"
+        }
+    }
+}
