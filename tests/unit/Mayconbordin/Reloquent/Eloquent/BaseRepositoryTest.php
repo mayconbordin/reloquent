@@ -52,7 +52,7 @@ class BaseRepositoryTest extends Test
     {
         Illuminate\Support\Facades\Config::shouldReceive('get')->with('reloquent.pagination.per_page', m::any())->andReturn(15);
         Illuminate\Support\Facades\Config::shouldReceive('get')->with('reloquent.limit', m::any())->andReturn(20);
-        Illuminate\Support\Facades\Config::shouldReceive('get')->with('reloquent.debug', m::any())->andReturn(false);
+        Illuminate\Support\Facades\Config::shouldReceive('get')->with('reloquent.debug', m::any())->andReturn(true);
 
         $this->model     = m::mock('\TestModel');
         $this->validator = m::mock('Illuminate\Validation\Factory');
@@ -111,6 +111,21 @@ class BaseRepositoryTest extends Test
 
 
         $this->repository->findByNameAndDescription($name, $desc);
+    }
+
+    public function testFindAllByTypeIdOrTypeId()
+    {
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $query = m::mock('Illuminate\Database\Eloquent\Builder');
+        $query->shouldReceive('where')->with('type_id', '=', 1)->once();
+        $query->shouldReceive('orWhere')->with('type_id', '=', 2)->once();
+        $query->shouldReceive('get')->once()->andReturn($results);
+
+        $this->model->shouldReceive('newQuery')->once()->andReturn($query);
+
+
+        $this->repository->findAllByTypeIdOrTypeId(1, 2);
     }
 
     public function testFindAllByTypeOrderBy()
@@ -266,6 +281,22 @@ class BaseRepositoryTest extends Test
 
 
         $this->repository->findAllByTypeOrderByDescNamePaginated($type);
+    }
+
+    public function testFindAllInType()
+    {
+        $types = [1, 2, 3, 4];
+
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $query = m::mock('Illuminate\Database\Eloquent\Builder');
+        $query->shouldReceive('whereIn')->with('type_id', $types)->once();
+        $query->shouldReceive('get')->once()->andReturn($results);
+
+        $this->model->shouldReceive('newQuery')->once()->andReturn($query);
+
+
+        $this->repository->findAllByInTypeId($types);
     }
 
     public function testUpdate()

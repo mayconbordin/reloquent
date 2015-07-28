@@ -467,7 +467,7 @@ abstract class BaseRepository implements BaseRepositoryContract
 
     protected function getMessage($key)
     {
-        return Lang::get('repository.'.$key, ['entity' => $this->name()]);
+        return Lang::get('reloquent::messages.'.$key, ['entity' => $this->name()]);
     }
 
     /**
