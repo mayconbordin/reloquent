@@ -12,52 +12,31 @@ See some examples below.
 
 ### Examples
 
-Assume we have a `Post` class model with columns: `id`, `title`, `content`, `category_id` and `author_id`.
-
-To find all posts that belong to a single category:
+Assume we have a `Post` class model with columns: `id`, `title`, `content`, `category_id` and `author_id`. The following method
+calls are possible:
 
 ```php
+// to find all posts that belong to a single category
 $repository->findAllByCategoryId(1);
-```
 
-We can also order the results by `id` in ascending order:
-
-```php
+// we can also order the results by id in ascending order
 $repository->findAllByCategoryIdOrderById(1);
-```
 
-or descending:
-
-```php
+// or descending
 $repository->findAllByCategoryIdOrderByDescId(1);
-```
 
-We could then limit the number of results returned to 15:
-
-```php
+// we could then limit the number of results returned to 15
 $repository->findAllByCategoryIdOrderByIdLimit(1, 15);
-```
 
-Or even paginate the results, with 15 records per page:
-
-```php
+// or even paginate the results, with 15 records per page
 $repository->findAllByCategoryIdOrderByIdPaginated(1, 15);
-```
 
-We can also get posts within a list of categories:
-
-```php
+// we can also get posts within a list of categories
 $repository->findAllByInCategoryId([1, 2, 3, 4]);
-```
 
-Or filter the posts by category and author:
-
-```php
+// or filter the posts by category and author
 $repository->findAllByCategoryIdAndAuthorId(1, 2);
-```
 
-Or by category or author:
-
-```php
+// or by category or author
 $repository->findAllByCategoryIdOrAuthorId(1, 2);
 ```
