@@ -1,5 +1,7 @@
 # reloquent
 
+[![Build Status](https://travis-ci.org/mayconbordin/reloquent.svg?branch=master)](https://travis-ci.org/mayconbordin/reloquent)
+
 Verbose Repository Data Access Layer for Laravel 5.
 
 ## Yet Another Repository package?
