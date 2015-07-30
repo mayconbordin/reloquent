@@ -9,8 +9,32 @@ Verbose Repository Data Access Layer for Laravel 5.
 If you search within Github you [can find](https://github.com/search?l=PHP&q=repository+laravel&ref=searchresults&type=Repositories&utf8=%E2%9C%93) 
 at least a dozen implementations of the repository pattern for Laravel 4 and 5. For Laravel 5, specifically, the best ones are [prettus/l5-repository](https://github.com/prettus/l5-repository) and [Bosnadev/Repositories](https://github.com/Bosnadev/Repositories).
 
-The difference between these packages and this one is a more flexible interface, enabling more complex queries through the Repository.
-See some examples below.
+The difference between these packages and this one is a more flexible interface, enabling more complex queries through the Repository. And a lot of tests.
+
+## Installation
+
+Add
+
+```json
+"mayconbordin/reloquent": "dev-master"
+```
+	
+to your composer.json. Then run `composer install` or `composer update`.
+
+Add the Service Provider to the `providers` array in `config/app.php`:
+	
+```php
+'providers' => array(
+    ...
+    'Mayconbordin\Reloquent\Providers\ReloquentServiceProvider',
+)
+```
+
+And then publish the configurations
+
+```bash
+php artisan vendor:publish
+```
 
 ## API & Usage
 
