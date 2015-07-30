@@ -12,7 +12,7 @@ at least a dozen implementations of the repository pattern for Laravel 4 and 5. 
 The difference between these packages and this one is a more flexible interface, enabling more complex queries through the Repository.
 See some examples below.
 
-## Interface Examples
+## API & Usage
 
 In the following sections examples will be given for all the interface methods available in the repository.
 
@@ -23,6 +23,9 @@ In the following sections examples will be given for all the interface methods a
 ```php
 // to find all posts that belong to a single category
 $repository->findAllByCategoryId(1);
+
+// fetch also the post tags and category
+$repository->findAllByCategoryIdWith(1, ['tags', 'category']);
 
 // we can also order the results by id in ascending order
 $repository->findAllByCategoryIdOrderById(1);
@@ -44,6 +47,22 @@ $repository->findAllByCategoryIdAndAuthorId(1, 2);
 
 // or by category or author
 $repository->findAllByCategoryIdOrAuthorId(1, 2);
+```
+
+### `findBy`
+
+```php
+// find a single post by author id
+$repository->findByAuthorId(1);
+
+// or with author id AND category id
+$repository->findByCategoryIdAndAuthorId(1, 2);
+
+// or with author id OR category id
+$repository->findByCategoryIdOrAuthorId(1, 2);
+
+// fetch also the post tags and category objects
+$repository->findByAuthorIdWith(1, ['tags', 'category']);
 ```
 
 ### `create`, `update` and `delete`
@@ -111,3 +130,10 @@ $attributes = [
 
 ### `exists`, `find`, `findByField` and `findWhere`
 
+```php
+// check if a post exists, returns a boolean
+$repository->exists(1);
+
+// find a post by id
+$repository->find(1);
+```
