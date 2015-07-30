@@ -21,12 +21,8 @@ use Illuminate\Support\Facades\Config;
 
 abstract class BaseRepository implements BaseRepositoryContract
 {
-    const ACTION_CREATE = 'create';
-    const ACTION_UPDATE = 'update';
-
     const RESULT_SINGLE = 1;
     const RESULT_ALL    = 2;
-
 
     /**
      * The Eloquent Model
@@ -71,11 +67,6 @@ abstract class BaseRepository implements BaseRepositoryContract
         $this->makeValidator();
     }
 
-    /**
-     * @param array $attributes
-     * @return mixed
-     * @throws ValidationError
-     */
     public function create(array $attributes)
     {
         $validator = $this->validate($attributes);
@@ -117,168 +108,6 @@ abstract class BaseRepository implements BaseRepositoryContract
         return $this->parserResult($model);
     }
 
-    public function all($columns = array('*'), $orderCol = null, $orderDir = 'asc')
-    {
-        $query = $this->model;
-
-        if ($orderCol != null) {
-            $query = $query->orderBy($orderCol, $orderDir);
-        }
-
-        $model = $query->get($columns);
-
-        $this->resetModel();
-
-        return $this->parserResult($model);
-    }
-
-    public function exists($id)
-    {
-        $model = DB::table($this->model->getTable())->where($this->model->getKeyName(), $id)->first();
-        $this->resetModel();
-        return !is_null($model);
-    }
-
-    /**
-     * Find data by id
-     * @param $id
-     * @param array $columns
-     * @return Model
-     * @throws NotFoundError
-     */
-    public function find($id, $columns = array('*'))
-    {
-        $model = $this->model->find($id, $columns);
-
-        if ($model == null) {
-            throw new NotFoundError($this->getMessage('not_found'));
-        }
-
-        $this->resetModel();
-        return $this->parserResult($model);
-    }
-
-    /**
-     * Find data by field and value
-     *
-     * @param string $field
-     * @param mixed  $value
-     * @param string $operator
-     * @param array  $columns
-     * @return mixed
-     */
-    public function findByField($field, $value = null, $operator = '=', $columns = array('*'))
-    {
-        $model = $this->model->where($field, $operator, $value)->first($columns);
-        $this->resetModel();
-        return $this->parserResult($model);
-    }
-
-    /**
-     * Find data by multiple fields
-     *
-     * @param array $where
-     * @param array $columns
-     * @return mixed
-     */
-    public function findWhere(array $where, $columns = array('*'))
-    {
-        $model = $this->createQuery($where)->first($columns);
-        $this->resetModel();
-        return $this->parserResult($model);
-    }
-
-    /**
-     * Find data by field and value
-     *
-     * @param string $field
-     * @param mixed $value
-     * @param string $operator
-     * @param array $columns
-     * @return mixed
-     */
-    public function findAllByField($field, $value = null, $operator = '=', $columns = array('*'))
-    {
-        $model = $this->model->where($field, $operator, $value)->get($columns);
-        $this->resetModel();
-        return $this->parserResult($model);
-    }
-
-    /**
-     * Find data by multiple fields
-     *
-     * @param array $where
-     * @param array $columns
-     * @return mixed
-     */
-    public function findAllWhere(array $where, $columns = array('*'))
-    {
-        $model = $this->createQuery($where)->get($columns);
-        $this->resetModel();
-        return $this->parserResult($model);
-    }
-
-    /**
-     * Find data by field and value with pagination.
-     *
-     * @param string $field
-     * @param mixed  $value
-     * @param string $operator
-     * @param int    $perPage
-     * @param array  $columns
-     * @return mixed
-     */
-    public function findAllByFieldPaginated($field, $value = null, $operator = '=', $perPage = 15, $columns = array('*'))
-    {
-        $model = $this->model->where($field, $operator, $value)->paginate($perPage, $columns);
-        $this->resetModel();
-        return $this->parserResult($model);
-    }
-
-    /**
-     * Find data by multiple fields
-     *
-     * @param array $where
-     * @param int   $perPage
-     * @param array $columns
-     * @return mixed
-     */
-    public function findAllWherePaginated(array $where, $perPage = 15, $columns = array('*'))
-    {
-        $model = $this->createQuery($where)->paginate($perPage, $columns);
-        $this->resetModel();
-        return $this->parserResult($model);
-    }
-
-    /**
-     * Retrieve all data of repository, paginated
-     * @param int $limit
-     * @param array $columns
-     * @param string|null $orderCol
-     * @param string $orderDir
-     * @return mixed
-     */
-    public function paginate($limit = 15, $columns = array('*'), $orderCol = null, $orderDir = 'asc')
-    {
-        $query = $this->model;
-
-        if ($orderCol != null) {
-            $query = $query->orderBy($orderCol, $orderDir);
-        }
-
-        $results = $this->model->paginate($limit, $columns);
-        $this->resetModel();
-        return $this->parserResult($results);
-    }
-
-    /**
-     * @return mixed
-     */
-    public function count()
-    {
-        return call_user_func_array([$this->model, 'count'], []);
-    }
-
     public function delete($id)
     {
         $model = $this->find($id);
@@ -297,46 +126,198 @@ abstract class BaseRepository implements BaseRepositoryContract
         DB::commit();
     }
 
-    /**
-     * @param $ids
-     * @return mixed
-     */
     public function destroy(array $ids)
     {
         return $this->model->destroy($ids);
     }
 
-    /**
-     * @param $observer
-     * @return mixed
-     */
+    public function exists($id)
+    {
+        $model = DB::table($this->model->getTable())->where($this->model->getKeyName(), $id)->first();
+        $this->resetModel();
+        return !is_null($model);
+    }
+
+    public function count()
+    {
+        return $this->model->count();
+    }
+
+    public function find($id, $columns = array('*'))
+    {
+        $model = $this->model->find($id, $columns);
+
+        if ($model == null) {
+            throw new NotFoundError($this->getMessage('not_found'));
+        }
+
+        $this->resetModel();
+        return $this->parserResult($model);
+    }
+
+    public function findByField($field, $value = null, $operator = '=', $columns = array('*'))
+    {
+        $model = $this->model->where($field, $operator, $value)->first($columns);
+        $this->resetModel();
+        return $this->parserResult($model);
+    }
+
+    public function findWhere(array $where, $columns = array('*'))
+    {
+        $model = $this->createQuery($where)->first($columns);
+        $this->resetModel();
+        return $this->parserResult($model);
+    }
+
+    public function all($orderBy = null, $with = null, $columns = array('*'))
+    {
+        $query = $this->model;
+
+        $this->applyAllClauses($query, $orderBy, $with);
+
+        $models = $query->get($columns);
+
+        $this->resetModel();
+
+        return $this->parserResult($models);
+    }
+
+    public function findAllByField($field, $value = null, $operator = '=', $orderBy = null, $with = null, $limit = null, $columns = array('*'))
+    {
+        $query = $this->model->where($field, $operator, $value);
+
+        $this->applyAllClauses($query, $orderBy, $with, $limit);
+
+        $models = $query->get($columns);
+
+        $this->resetModel();
+        return $this->parserResult($models);
+    }
+
+    public function findAllWhere(array $where, $orderBy = null, $with = null, $limit = null, $columns = array('*'))
+    {
+        $query = $this->createQuery($where);
+
+        $this->applyAllClauses($query, $orderBy, $with, $limit);
+
+        $models = $query->get($columns);
+
+        $this->resetModel();
+        return $this->parserResult($models);
+    }
+
+    public function findAllByFieldPaginated($field, $value = null, $operator = '=', $perPage = 15, $orderBy = null, $with = null, $columns = array('*'))
+    {
+        $query = $this->model->where($field, $operator, $value);
+
+        $this->applyAllClauses($query, $orderBy, $with);
+
+        $models = $query->paginate($perPage, $columns);
+
+        $this->resetModel();
+        return $this->parserResult($models);
+    }
+
+    public function findAllWherePaginated(array $where, $perPage = 15, $orderBy = null, $with = null, $columns = array('*'))
+    {
+        $query = $this->createQuery($where);
+
+        $this->applyAllClauses($query, $orderBy, $with);
+
+        $models = $query->paginate($perPage, $columns);
+
+        $this->resetModel();
+        return $this->parserResult($models);
+    }
+
+    public function paginate($perPage = 15, $orderBy = null, $with = null, $columns = array('*'))
+    {
+        $query = $this->model;
+
+        $this->applyAllClauses($query, $orderBy, $with);
+
+        $models = $query->paginate($perPage, $columns);
+
+        $this->resetModel();
+        return $this->parserResult($models);
+    }
+
     public function observe($observer)
     {
         return call_user_func_array([$this->model, 'observe'], [$observer]);
     }
 
     /**
-     * Load relations
+     * Apply all clauses to an existing query.
      *
-     * @param array|string $relations
-     * @return $this
+     * @param Model|Builder $query
+     * @param string|array $orderBy
+     * @param string|array $with
+     * @param int $limit
      */
-    public function with($relations)
+    protected function applyAllClauses($query, $orderBy = null, $with = null, $limit = null)
     {
-        $this->model = $this->model->with($relations);
-        return $this;
+        $this->applyOrderBy($query, $orderBy);
+        $this->applyWith($query, $with);
+        $this->applyLimit($query, $limit);
     }
 
-    protected function orderBy($query, $field, $order)
+    /**
+     * Apply a with to an existing query
+     *
+     * @param Model|Builder $query
+     * @param array|string $relations
+     */
+    protected function applyWith($query, $relations = null)
     {
-        $order = is_null($order) ? 'asc' : $order;
+        if ($relations != null) {
+            $query->with($relations);
+        }
+    }
 
-        if (!in_array($order, ['asc', 'desc'])) {
-            throw new \InvalidArgumentException("Valid values for orderBy are 'asc' and 'desc'");
+    /**
+     * Apply a limit to an existing query
+     *
+     * @param \Illuminate\Database\Query\Builder|Builder $query
+     * @param int $limit
+     */
+    protected function applyLimit($query, $limit = null)
+    {
+        if ($limit != null && is_numeric($limit)) {
+            $query->limit($limit);
+        }
+    }
+
+    /**
+     * Apply an order by to an existing query.
+     *
+     * @param \Illuminate\Database\Query\Builder|Builder $query
+     * @param string|array $orderBy
+     */
+    protected function applyOrderBy($query, $orderBy = null)
+    {
+        if ($orderBy == null) return;
+
+        if (is_string($orderBy)) {
+            if (strlen($orderBy) == 0) return;
+            $orderBy = [$orderBy];
         }
 
-        if ($field != null) {
-            $query->order->orderBy($field, $order);
+        if (is_array($orderBy) && sizeof($orderBy) > 0) {
+            foreach ($orderBy as $value) {
+                $values = explode(':', $value);
+
+                $field = trim($values[0]);
+                $order = isset($values[1]) ? trim($values[1]) : 'asc';
+
+                if (!in_array($order, ['asc', 'desc'])) {
+                    throw new \InvalidArgumentException("Valid values for orderBy are 'asc' and 'desc'");
+                }
+
+                if ($field != null) {
+                    $query->orderBy($field, $order);
+                }
+            }
         }
     }
 
@@ -373,13 +354,6 @@ abstract class BaseRepository implements BaseRepositoryContract
         return array_filter(array_only($rules, $query));
     }
 
-    /**
-     * @param array $data
-     * @param string $action
-     * @param null $rules
-     * @param bool $custom
-     * @return \Illuminate\Validation\Validator
-     */
     public function validate(array $data, $action = self::ACTION_CREATE, $rules = null, $custom = false)
     {
         if (!$custom) {
@@ -418,6 +392,7 @@ abstract class BaseRepository implements BaseRepositoryContract
 
     /**
      * Transform the array of attributes for the create and update methods.
+     *
      * @param array $attributes
      * @return array
      */
@@ -453,26 +428,29 @@ abstract class BaseRepository implements BaseRepositoryContract
     }
 
     /**
-     * @return bool
+     * @return bool If the debug options is enabled
      */
     public function isDebug()
     {
         return Config::get('reloquent.debug', true);
     }
 
-    public function resetModel()
-    {
-        $this->makeModel();
-    }
-
+    /**
+     * Get a message string.
+     *
+     * @param string $key
+     * @return string
+     */
     protected function getMessage($key)
     {
         return Lang::get('reloquent::messages.'.$key, ['entity' => $this->name()]);
     }
 
     /**
+     * Make and get an instance of the model.
+     *
      * @return Model
-     * @throws RepositoryException
+     * @throws RepositoryException If the model class is not an instance of an Eloquent Model
      */
     protected function makeModel()
     {
@@ -486,11 +464,23 @@ abstract class BaseRepository implements BaseRepositoryContract
     }
 
     /**
-     * Get an instance of the validator.
+     * Resets the model instance.
+     *
+     * @throws RepositoryException
+     */
+    public function resetModel()
+    {
+        $this->makeModel();
+    }
+
+    /**
+     * Make and get an instance of the validator.
+     * @return Validator
      */
     protected function makeValidator()
     {
         $this->validator = $this->application->make('validator');
+        return $this->validator;
     }
 
     /**
@@ -539,6 +529,11 @@ abstract class BaseRepository implements BaseRepositoryContract
         }
     }
 
+    /**
+     * Deletes the relations of a model.
+     *
+     * @param Model $model
+     */
     protected function deleteRelated(Model $model)
     {
         foreach ($this->relations as $relation) {
@@ -571,16 +566,7 @@ abstract class BaseRepository implements BaseRepositoryContract
         $this->saveRelated($model, $related, 'Illuminate\Database\Eloquent\Relations\BelongsToMany', $action);
     }
 
-
-    /**
-     * Get a new query that searches by attributes.
-     *
-     * @param  array  $where
-     * @param  string $operator   Default: '='
-     *
-     * @return Builder
-     */
-    public function createQuery(array $where, $orderBy = [], $limit = null, $with = null, $operator = '=')
+    protected function createQuery(array $where, $orderBy = [], $limit = null, $with = null, $defaultOperator = '=')
     {
         $query = $this->model->newQuery();
 
@@ -589,7 +575,15 @@ abstract class BaseRepository implements BaseRepositoryContract
         }
 
         foreach ($where as $field => $value) {
-            if (is_array($value) && sizeof($value) == 3) {
+            if (is_array($value) && sizeof($value) == 2) {
+                list($condition, $val) = $value;
+
+                if ($condition == 'in') {
+                    $query->whereIn($field, $val);
+                } else {
+                    $query->where($field, $condition, $val);
+                }
+            } else if (is_array($value) && sizeof($value) == 3) {
                 list($field, $condition, $val) = $value;
 
                 if ($condition == 'in') {
@@ -606,7 +600,7 @@ abstract class BaseRepository implements BaseRepositoryContract
                     $query->where($field, $condition, $val);
                 }
             } else {
-                $query->where($field, $operator, $value);
+                $query->where($field, $defaultOperator, $value);
             }
         }
 
@@ -724,8 +718,6 @@ abstract class BaseRepository implements BaseRepositoryContract
             if (array_search($op, $parts[0]) !== false)
                 $partsSize--;
         }
-        //if (array_search('Limit', $parts[0]) !== false) $partsSize--;
-        //if (array_search('Paginated', $parts[0]) !== false) $partsSize--;
 
         $action = $matches[1] . $matches[2];
         $fields = $this->parseFields($matches[3]);

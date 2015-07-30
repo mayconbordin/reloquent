@@ -79,6 +79,22 @@ class BaseRepositoryTest extends Test
         $this->repository->create($attributes);
     }
 
+    public function testFindByTypeId()
+    {
+        $typeId = 1;
+
+        $result = m::mock('\TestModel');
+
+        $query = m::mock('Illuminate\Database\Eloquent\Builder');
+        $query->shouldReceive('where')->with('type_id', '=', $typeId)->once();
+        $query->shouldReceive('first')->once()->andReturn($result);
+
+        $this->model->shouldReceive('newQuery')->once()->andReturn($query);
+
+
+        $this->repository->findByTypeId($typeId);
+    }
+
     public function testFindByName()
     {
         $name = "test";
@@ -93,6 +109,23 @@ class BaseRepositoryTest extends Test
 
 
         $this->repository->findByName($name);
+    }
+
+    public function testFindByNameWith()
+    {
+        $name = "test";
+
+        $result = m::mock('\TestModel');
+
+        $query = m::mock('Illuminate\Database\Eloquent\Builder');
+        $query->shouldReceive('with')->with(['childs', 'parent'])->once()->andReturnSelf();
+        $query->shouldReceive('where')->with('name', '=', $name)->once();
+        $query->shouldReceive('first')->once()->andReturn($result);
+
+        $this->model->shouldReceive('newQuery')->once()->andReturn($query);
+
+
+        $this->repository->findByNameWith($name, ['childs', 'parent']);
     }
 
     public function testFindByNameAndDescription()
@@ -111,6 +144,43 @@ class BaseRepositoryTest extends Test
 
 
         $this->repository->findByNameAndDescription($name, $desc);
+    }
+
+    public function testFindByNameAndDescriptionWith()
+    {
+        $name = "test";
+        $desc = "test_description";
+
+        $result = m::mock('\TestModel');
+
+        $query = m::mock('Illuminate\Database\Eloquent\Builder');
+        $query->shouldReceive('with')->with(['childs', 'parent'])->once()->andReturnSelf();
+        $query->shouldReceive('where')->with('name', '=', $name)->once();
+        $query->shouldReceive('where')->with('description', '=', $desc)->once();
+        $query->shouldReceive('first')->once()->andReturn($result);
+
+        $this->model->shouldReceive('newQuery')->once()->andReturn($query);
+
+
+        $this->repository->findByNameAndDescriptionWith($name, $desc, ['childs', 'parent']);
+    }
+
+    public function testFindByNameOrDescription()
+    {
+        $name = "test";
+        $desc = "test_description";
+
+        $result = m::mock('\TestModel');
+
+        $query = m::mock('Illuminate\Database\Eloquent\Builder');
+        $query->shouldReceive('where')->with('name', '=', $name)->once();
+        $query->shouldReceive('orWhere')->with('description', '=', $desc)->once();
+        $query->shouldReceive('first')->once()->andReturn($result);
+
+        $this->model->shouldReceive('newQuery')->once()->andReturn($query);
+
+
+        $this->repository->findByNameOrDescription($name, $desc);
     }
 
     public function testFindAllByTypeIdOrTypeId()
@@ -386,7 +456,222 @@ class BaseRepositoryTest extends Test
         $this->model->shouldReceive('orderBy')->once()->with('name', 'desc')->andReturn($this->model);
         $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
 
-        $r = $this->repository->all(['*'], 'name', 'desc');
+        $r = $this->repository->all('name:desc');
+
+        $this->assertEquals($results, $r);
+    }
+
+    public function testAllOrderByWith()
+    {
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $this->model->shouldReceive('with')->once()->with(['childs', 'parent'])->andReturnSelf();
+        $this->model->shouldReceive('orderBy')->once()->with('name', 'desc')->andReturnSelf();
+        $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
+
+        $r = $this->repository->all('name:desc', ['childs', 'parent']);
+
+        $this->assertEquals($results, $r);
+    }
+
+    public function testAllOrderByAlt()
+    {
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $this->model->shouldReceive('orderBy')->once()->with('name', 'desc')->andReturn($this->model);
+        $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
+
+        $r = $this->repository->all(['name:desc']);
+
+        $this->assertEquals($results, $r);
+    }
+
+    public function testAllOrderByMultipleFields()
+    {
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $this->model->shouldReceive('orderBy')->once()->with('name', 'desc')->andReturn($this->model);
+        $this->model->shouldReceive('orderBy')->once()->with('date', 'asc')->andReturn($this->model);
+        $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
+
+        $r = $this->repository->all(['name:desc', 'date']);
+
+        $this->assertEquals($results, $r);
+    }
+
+    public function testFindAllByField()
+    {
+        $name = 'test';
+
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $this->model->shouldReceive('where')->once()->with('name', '=', $name)->andReturnSelf();
+        $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
+
+        $r = $this->repository->findAllByField('name', $name);
+
+        $this->assertEquals($results, $r);
+    }
+
+    public function testFindAllByFieldOrderBy()
+    {
+        $name = 'test';
+
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $this->model->shouldReceive('orderBy')->once()->with('name', 'desc')->andReturnSelf();
+        $this->model->shouldReceive('where')->once()->with('name', '=', $name)->andReturnSelf();
+        $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
+
+        $r = $this->repository->findAllByField('name', $name, '=', 'name:desc');
+
+        $this->assertEquals($results, $r);
+    }
+
+    public function testFindAllByFieldWith()
+    {
+        $name = 'test';
+
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $this->model->shouldReceive('with')->once()->with(['childs', 'parent'])->andReturnSelf();
+        $this->model->shouldReceive('where')->once()->with('name', '=', $name)->andReturnSelf();
+        $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
+
+        $r = $this->repository->findAllByField('name', $name, '=', null, ['childs', 'parent']);
+
+        $this->assertEquals($results, $r);
+    }
+
+    public function testFindAllByFieldOrderByWith()
+    {
+        $name = 'test';
+
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $this->model->shouldReceive('with')->once()->with(['childs', 'parent'])->andReturnSelf();
+        $this->model->shouldReceive('orderBy')->once()->with('name', 'desc')->andReturnSelf();
+        $this->model->shouldReceive('where')->once()->with('name', '=', $name)->andReturnSelf();
+        $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
+
+        $r = $this->repository->findAllByField('name', $name, '=', 'name:desc', ['childs', 'parent']);
+
+        $this->assertEquals($results, $r);
+    }
+
+    public function testFindAllByFieldOrderByWithLimit()
+    {
+        $name = 'test';
+
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $this->model->shouldReceive('with')->once()->with(['childs', 'parent'])->andReturnSelf();
+        $this->model->shouldReceive('orderBy')->once()->with('name', 'desc')->andReturnSelf();
+        $this->model->shouldReceive('where')->once()->with('name', '=', $name)->andReturnSelf();
+        $this->model->shouldReceive('limit')->once()->with(10)->andReturnSelf();
+        $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
+
+        $r = $this->repository->findAllByField('name', $name, '=', 'name:desc', ['childs', 'parent'], 10);
+
+        $this->assertEquals($results, $r);
+    }
+
+    public function testFindAllWhere()
+    {
+        $name = 'test';
+
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $this->model->shouldReceive('newQuery')->once()->andReturnSelf();
+        $this->model->shouldReceive('where')->once()->with('name', '=', $name)->andReturnSelf();
+        $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
+
+        $r = $this->repository->findAllWhere(['name' => $name]);
+
+        $this->assertEquals($results, $r);
+    }
+
+    public function testFindAllWhereOrderBy()
+    {
+        $name = 'test';
+
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $this->model->shouldReceive('newQuery')->once()->andReturnSelf();
+        $this->model->shouldReceive('where')->once()->with('name', '=', $name)->andReturnSelf();
+        $this->model->shouldReceive('orderBy')->once()->with('name', 'desc')->andReturnSelf();
+        $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
+
+        $r = $this->repository->findAllWhere(['name' => $name], 'name:desc');
+
+        $this->assertEquals($results, $r);
+    }
+
+    public function testFindAllWhereOrderByWith()
+    {
+        $name = 'test';
+
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $this->model->shouldReceive('newQuery')->once()->andReturnSelf();
+        $this->model->shouldReceive('with')->once()->with(['parent'])->andReturnSelf();
+        $this->model->shouldReceive('where')->once()->with('name', '=', $name)->andReturnSelf();
+        $this->model->shouldReceive('orderBy')->once()->with('name', 'desc')->andReturnSelf();
+        $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
+
+        $r = $this->repository->findAllWhere(['name' => $name], 'name:desc', ['parent']);
+
+        $this->assertEquals($results, $r);
+    }
+
+    public function testFindAllWhereOrderByWithLimit()
+    {
+        $name = 'test';
+
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $this->model->shouldReceive('newQuery')->once()->andReturnSelf();
+        $this->model->shouldReceive('with')->once()->with(['parent'])->andReturnSelf();
+        $this->model->shouldReceive('where')->once()->with('name', '=', $name)->andReturnSelf();
+        $this->model->shouldReceive('orderBy')->once()->with('name', 'desc')->andReturnSelf();
+        $this->model->shouldReceive('limit')->once()->with(10)->andReturnSelf();
+        $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
+
+        $r = $this->repository->findAllWhere(['name' => $name], 'name:desc', ['parent'], 10);
+
+        $this->assertEquals($results, $r);
+    }
+
+    public function testFindAllWhereMultiple()
+    {
+        $name = 'test';
+        $typeId = 2;
+
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $this->model->shouldReceive('newQuery')->once()->andReturnSelf();
+        $this->model->shouldReceive('where')->once()->with('name', '=', $name)->andReturnSelf();
+        $this->model->shouldReceive('where')->once()->with('type_id', '=', $typeId)->andReturnSelf();
+        $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
+
+        $r = $this->repository->findAllWhere(['name' => $name, 'type_id' => $typeId]);
+
+        $this->assertEquals($results, $r);
+    }
+
+    public function testFindAllWhereComplex()
+    {
+        $name = 'test';
+        $typeId = 2;
+
+        $results = m::mock('Illuminate\Database\Eloquent\Collection');
+
+        $this->model->shouldReceive('newQuery')->once()->andReturnSelf();
+        $this->model->shouldReceive('where')->once()->with('name', '!=', $name)->andReturnSelf();
+        $this->model->shouldReceive('orWhere')->once()->with('type_id', '=', $typeId)->andReturnSelf();
+        $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
+
+        $r = $this->repository->findAllWhere(['name' => ['!=', $name], 'type_id' => ['or', 'type_id', '=', $typeId]]);
 
         $this->assertEquals($results, $r);
     }
