@@ -180,8 +180,6 @@ abstract class BaseRepository implements BaseRepositoryContract
 
         $model = $query->first($columns);
 
-        //$model = $this->createQuery($where, [], null, $with)->first($columns);
-
         $this->resetModel();
         return $this->parserResult($model);
     }
@@ -359,6 +357,8 @@ abstract class BaseRepository implements BaseRepositoryContract
                     list($value) = $rawValue;
                 } else if (sizeof($rawValue) == 2) {
                     list($operator, $value) = $rawValue;
+                } else if (sizeof($rawValue) == 3) {
+                    list($statement, $operator, $value) = $rawValue;
                 }
 
                 if (in_array($operator, $statements)) {

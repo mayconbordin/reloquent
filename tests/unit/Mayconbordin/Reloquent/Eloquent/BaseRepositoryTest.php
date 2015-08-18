@@ -755,5 +755,16 @@ class BaseRepositoryTest extends Test
 
         $result = $this->repository->findWhere(['name' => ['test'], 'parent_id' => ['in', [1, 2, 3]]]);
         $this->assertEquals($this->model, $result);
+
+    }
+
+    public function testFindWhereComplex()
+    {
+        $this->model->shouldReceive('where')->once()->with('name', 'LIKE', 't%')->andReturnSelf();
+        $this->model->shouldReceive('orWhere')->once()->with('title', 'LIKE', 'a%')->andReturnSelf();
+        $this->model->shouldReceive('first')->once()->with(['*'])->andReturn($this->model);
+
+        $result = $this->repository->findWhere(['name' => ['LIKE', 't%'], 'title' => ['or', 'LIKE', 'a%']]);
+        $this->assertEquals($this->model, $result);
     }
 }

@@ -177,14 +177,72 @@ $repository->findByField('title', 'A%', 'LIKE', ['author', 'tags']);
 ### `findWhere`
 
 The `findWhere` method is not as pretty as the other methods. The first argument is an associative array of `where` statements.
-An statement is an array that contains the 
+An statement is an array that contains the value of the field, and optionally the operator and the statement.
 
 ```php
 $repository->findWhere([
-    'title' => [''],
-    
-    'category_id' => ['!=', 2],
-    'author_id' => 1
+    'title' => ['test'],        // WHERE title = 'test'
+    'category_id' => ['!=', 2], // AND category_id != 2
+    'author_id' => ['or', 1]    // OR author_id = 1
+    'content' => ['or', 'like', '%test%']    // OR content LIKE %test%
 ]);
+```
 
+### `all`, `findAllByField` and `findAllWhere`
+
+```php
+// get all posts
+$repository->all();
+
+// get all posts ordered by title
+$repository->all('title:asc');
+
+// get all posts ordered by id and title
+$repository->all(['id:asc', 'title:asc']);
+
+// get all posts by author 
+$repository->findAllByField('author_id', 1);
+
+// get all posts not by author 
+$repository->findAllByField('author_id', 1, '!=');
+
+// get all posts by author ordered by title
+$repository->findAllByField('author_id', 1, '=', 'title:asc');
+
+// get 15 posts by author ordered by title
+$repository->findAllByField('author_id', 1, '=', 'title:asc', ['author'], 15);
+
+// same as the above query
+$repository->findAllWhere(['author_id' => 1], 'title:desc', ['author'], 15);
+```
+
+### `paginate`, `findAllByFieldPaginated` and `findAllWherePaginated`
+
+```php
+// get all posts
+$repository->paginate();
+
+// get 15 posts per page ordered by title
+$repository->paginate(15, 'title:asc');
+
+// get 15 posts per page posts ordered by id and title
+$repository->paginate(15, ['id:asc', 'title:asc']);
+
+// get 15 posts per page posts ordered by id and title with author
+$repository->paginate(15, ['id:asc', 'title:asc'], ['author']);
+
+// get posts by author 
+$repository->findAllByFieldPaginated('author_id', 1);
+
+// get posts not by author 
+$repository->findAllByFieldPaginated('author_id', 1, '!=');
+
+// get posts by author ordered by title
+$repository->findAllByFieldPaginated('author_id', 1, '=', 'title:asc');
+
+// get 15 posts per page by author ordered by title
+$repository->findAllByFieldPaginated('author_id', 1, '=', 'title:asc', 15, ['author']);
+
+// same as the above query
+$repository->findAllWherePaginated(['author_id' => 1], 15, 'title:desc', ['author']);
 ```
