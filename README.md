@@ -152,7 +152,7 @@ $attributes = [
 
 `BelongsTo` relations are saved using the `associate` method, while `BelongsToMany` use the `attach` method. And when a post is deleted, the repository will iterate over the defined relations and remove them. For relations that are instances of `HasOneOrMany` the method `delete` is used, and for `BelongsToMany` the `detach` method.
 
-### `exists`, `find`, `findByField` and `findWhere`
+### `exists`, `find` and `findByField`
 
 ```php
 // check if a post exists, returns a boolean
@@ -160,4 +160,31 @@ $repository->exists(1);
 
 // find a post by id
 $repository->find(1);
+
+// bring also its relations
+$repository->find(1, ['author', 'tags']);
+
+// find a post by author
+$repository->findByField('author_id', 1);
+
+// find a post whose title starts with 'A'
+$repository->findByField('title', 'A%', 'LIKE');
+
+// and you can also bring the post's relations
+$repository->findByField('title', 'A%', 'LIKE', ['author', 'tags']);
+```
+
+### `findWhere`
+
+The `findWhere` method is not as pretty as the other methods. The first argument is an associative array of `where` statements.
+An statement is an array that contains the 
+
+```php
+$repository->findWhere([
+    'title' => [''],
+    
+    'category_id' => ['!=', 2],
+    'author_id' => 1
+]);
+
 ```

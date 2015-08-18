@@ -61,11 +61,12 @@ interface BaseRepositoryContract {
      * Find data by id.
      *
      * @param mixed $id
+     * @param null|string|array $with
      * @param array $columns
      * @return Model
      * @throws NotFoundError
      */
-    public function find($id, $columns = array('*'));
+    public function find($id, $with = null, $columns = array('*'));
 
     /**
      * Find data by field and value
@@ -73,21 +74,22 @@ interface BaseRepositoryContract {
      * @param string $field
      * @param mixed  $value
      * @param string $operator
+     * @param null|string|array $with
      * @param array  $columns
      * @return Model
      *  @throws NotFoundError
      */
-    public function findByField($field, $value = null, $operator = '=', $columns = array('*'));
+    public function findByField($field, $value = null, $operator = '=', $with = null, $columns = array('*'));
 
     /**
      * Find data by multiple fields
      *
      * @param array $where
+     * @param null|string|array $with
      * @param array $columns
      * @return Model
-     *  @throws NotFoundError
      */
-    public function findWhere(array $where, $columns = array('*'));
+    public function findWhere(array $where, $with = null, $columns = array('*'));
 
     /**
      * Get all the existing records.

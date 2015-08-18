@@ -143,9 +143,13 @@ abstract class BaseRepository implements BaseRepositoryContract
         return $this->model->count();
     }
 
-    public function find($id, $columns = array('*'))
+    public function find($id, $with = null, $columns = array('*'))
     {
-        $model = $this->model->find($id, $columns);
+        $query = $this->model;
+
+        $this->applyWith($query, $with);
+
+        $model = $query->find($id, $columns);
 
         if ($model == null) {
             throw new NotFoundError($this->getMessage('not_found'));
@@ -155,16 +159,29 @@ abstract class BaseRepository implements BaseRepositoryContract
         return $this->parserResult($model);
     }
 
-    public function findByField($field, $value = null, $operator = '=', $columns = array('*'))
+    public function findByField($field, $value = null, $operator = '=', $with = null, $columns = array('*'))
     {
-        $model = $this->model->where($field, $operator, $value)->first($columns);
+        $query = $this->model;
+
+        $this->applyWith($query, $with);
+
+        $model = $query->where($field, $operator, $value)->first($columns);
+
         $this->resetModel();
         return $this->parserResult($model);
     }
 
-    public function findWhere(array $where, $columns = array('*'))
+    public function findWhere(array $where, $with = null, $columns = array('*'))
     {
-        $model = $this->createQuery($where)->first($columns);
+        $query = $this->model;
+
+        $this->applyWhere($query, $where);
+        $this->applyWith($query, $with);
+
+        $model = $query->first($columns);
+
+        //$model = $this->createQuery($where, [], null, $with)->first($columns);
+
         $this->resetModel();
         return $this->parserResult($model);
     }
@@ -317,6 +334,58 @@ abstract class BaseRepository implements BaseRepositoryContract
                 if ($field != null) {
                     $query->orderBy($field, $order);
                 }
+            }
+        }
+    }
+
+    /**
+     * @param \Illuminate\Database\Query\Builder|Builder $query
+     * @param array $where
+     * @throws RepositoryException
+     */
+    protected function applyWhere($query, array $where = [])
+    {
+        $statements = ['and', 'or', 'in', 'orIn', 'notIn', 'orNotIn', 'between', 'orBetween', 'notBetween', 'orNotBetween'];
+
+        foreach ($where as $field => $rawValue) {
+            $operator  = '=';
+            $statement = 'and';
+
+            $isOr  = stripos($statement, 'or') !== false;
+            $isNot = stripos($statement, 'not') !== false;
+
+            if (is_array($rawValue)) {
+                if (sizeof($rawValue) == 1) {
+                    list($value) = $rawValue;
+                } else if (sizeof($rawValue) == 2) {
+                    list($operator, $value) = $rawValue;
+                }
+
+                if (in_array($operator, $statements)) {
+                    $statement = $operator;
+                }
+            } else {
+                $value = $rawValue;
+            }
+
+            if ($statement == 'and') {
+                $query->where($field, $operator, $value);
+            }
+
+            else if ($statement == 'or') {
+                $query->orWhere($field, $operator, $value);
+            }
+
+            else if (in_array($statement, ['in', 'orIn', 'notIn', 'orNotIn'])) {
+                $query->whereIn($field, $value, $isOr ? 'or' : 'and', $isNot);
+            }
+
+            else if (in_array($statement, ['between', 'orBetween', 'notBetween', 'orNotBetween'])) {
+                $query->whereIn($field, $value, $isOr ? 'or' : 'and', $isNot);
+            }
+
+            else {
+                throw new RepositoryException("The statement '$statement' is not supported.'");
             }
         }
     }

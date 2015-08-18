@@ -3,6 +3,7 @@
 use Illuminate\Database\Eloquent\Model;
 use Mayconbordin\Reloquent\Exceptions\RepositoryException;
 use Mayconbordin\Reloquent\Eloquent\BaseRepository;
+use Mayconbordin\Reloquent\Exceptions\NotFoundError;
 use Codeception\TestCase\Test;
 use Mockery as m;
 use AspectMock\Test as t;
@@ -53,6 +54,7 @@ class BaseRepositoryTest extends Test
         Illuminate\Support\Facades\Config::shouldReceive('get')->with('reloquent.pagination.per_page', m::any())->andReturn(15);
         Illuminate\Support\Facades\Config::shouldReceive('get')->with('reloquent.limit', m::any())->andReturn(20);
         Illuminate\Support\Facades\Config::shouldReceive('get')->with('reloquent.debug', m::any())->andReturn(false);
+        Illuminate\Support\Facades\Lang::shouldReceive('get')->with(m::any(), m::any())->andReturn('');
 
         $this->model     = m::mock('\TestModel');
         $this->validator = m::mock('Illuminate\Validation\Factory');
@@ -698,6 +700,26 @@ class BaseRepositoryTest extends Test
         $this->assertEquals($this->model, $result);
     }
 
+    public function testFindWith()
+    {
+        $this->model->shouldReceive('find')->once()->with(1, ['*'])->andReturnSelf();
+        $this->model->shouldReceive('with')->once()->with(['childs', 'parent'])->andReturnSelf();
+
+        $result = $this->repository->find(1, ['childs', 'parent']);
+
+        $this->assertEquals($this->model, $result);
+    }
+
+    public function testFindNotFound()
+    {
+        $this->model->shouldReceive('find')->once()->with(1, ['*'])->andReturn(null);
+
+        try {
+            $this->repository->find(1);
+            $this->fail("Should receive exception for not found item");
+        } catch (NotFoundError $e) {}
+    }
+
     public function testFindByField()
     {
         $this->model->shouldReceive('where')->once()->with('name', '=', 'test')->andReturnSelf();
@@ -708,6 +730,30 @@ class BaseRepositoryTest extends Test
         $this->model->shouldReceive('where')->once()->with('name', 'LIKE', 't%')->andReturnSelf();
         $this->model->shouldReceive('first')->once()->with(['*'])->andReturn($this->model);
         $result = $this->repository->findByField('name', 't%', 'LIKE');
+        $this->assertEquals($this->model, $result);
+    }
+
+    public function testFindWhere()
+    {
+        $this->model->shouldReceive('where')->once()->with('name', '=', 'test')->andReturnSelf();
+        $this->model->shouldReceive('first')->once()->with(['*'])->andReturn($this->model);
+
+        $result = $this->repository->findWhere(['name' => 'test']);
+        $this->assertEquals($this->model, $result);
+
+
+        $this->model->shouldReceive('where')->once()->with('name', 'LIKE', 't%')->andReturnSelf();
+        $this->model->shouldReceive('first')->once()->with(['*'])->andReturn($this->model);
+
+        $result = $this->repository->findWhere(['name' => ['LIKE', 't%']]);
+        $this->assertEquals($this->model, $result);
+
+
+        $this->model->shouldReceive('where')->once()->with('name', '=', 'test')->andReturnSelf();
+        $this->model->shouldReceive('whereIn')->once()->with('parent_id', [1, 2, 3], 'and', false)->andReturnSelf();
+        $this->model->shouldReceive('first')->once()->with(['*'])->andReturn($this->model);
+
+        $result = $this->repository->findWhere(['name' => ['test'], 'parent_id' => ['in', [1, 2, 3]]]);
         $this->assertEquals($this->model, $result);
     }
 }
