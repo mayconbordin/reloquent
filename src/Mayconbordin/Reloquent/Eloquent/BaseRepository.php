@@ -146,9 +146,7 @@ abstract class BaseRepository implements BaseRepositoryContract
     public function find($id, $with = null, $columns = array('*'))
     {
         $query = $this->model;
-
-        $this->applyWith($query, $with);
-
+        $query = $this->applyWith($query, $with);
         $model = $query->find($id, $columns);
 
         if ($model == null) {
@@ -162,9 +160,7 @@ abstract class BaseRepository implements BaseRepositoryContract
     public function findByField($field, $value = null, $operator = '=', $with = null, $columns = array('*'))
     {
         $query = $this->model;
-
-        $this->applyWith($query, $with);
-
+        $query = $this->applyWith($query, $with);
         $model = $query->where($field, $operator, $value)->first($columns);
 
         $this->resetModel();
@@ -174,87 +170,72 @@ abstract class BaseRepository implements BaseRepositoryContract
     public function findWhere(array $where, $with = null, $columns = array('*'))
     {
         $query = $this->model;
-
-        $this->applyWhere($query, $where);
-        $this->applyWith($query, $with);
-
+        $query = $this->applyWhere($query, $where);
+        $query = $this->applyWith($query, $with);
         $model = $query->first($columns);
 
         $this->resetModel();
         return $this->parserResult($model);
     }
 
-    public function all($orderBy = null, $with = null, $columns = array('*'))
+    public function all($orderBy = null, $with = null, $limit = null, $columns = array('*'))
     {
-        $query = $this->model;
-
-        $this->applyAllClauses($query, $orderBy, $with);
-
+        $query  = $this->model;
+        $query  = $this->applyAllClauses($query, $orderBy, $with, $limit);
         $models = $query->get($columns);
 
         $this->resetModel();
-
-        return $this->parserResult($models);
+        return $this->parserResults($models);
     }
 
     public function findAllByField($field, $value = null, $operator = '=', $orderBy = null, $with = null, $limit = null, $columns = array('*'))
     {
-        $query = $this->model->where($field, $operator, $value);
-
-        $this->applyAllClauses($query, $orderBy, $with, $limit);
-
+        $query  = $this->model->where($field, $operator, $value);
+        $query  = $this->applyAllClauses($query, $orderBy, $with, $limit);
         $models = $query->get($columns);
 
         $this->resetModel();
-        return $this->parserResult($models);
+        return $this->parserResults($models);
     }
 
     public function findAllWhere(array $where, $orderBy = null, $with = null, $limit = null, $columns = array('*'))
     {
-        $query = $this->createQuery($where);
-
-        $this->applyAllClauses($query, $orderBy, $with, $limit);
-
+        $query  = $this->createQuery($where);
+        $query  = $this->applyAllClauses($query, $orderBy, $with, $limit);
         $models = $query->get($columns);
 
         $this->resetModel();
-        return $this->parserResult($models);
+        return $this->parserResults($models);
     }
 
     public function findAllByFieldPaginated($field, $value = null, $operator = '=', $perPage = 15, $orderBy = null, $with = null, $columns = array('*'))
     {
-        $query = $this->model->where($field, $operator, $value);
-
-        $this->applyAllClauses($query, $orderBy, $with);
-
+        $query  = $this->model->where($field, $operator, $value);
+        $query  = $this->applyAllClauses($query, $orderBy, $with);
         $models = $query->paginate($perPage, $columns);
 
         $this->resetModel();
-        return $this->parserResult($models);
+        return $this->parserResults($models);
     }
 
     public function findAllWherePaginated(array $where, $perPage = 15, $orderBy = null, $with = null, $columns = array('*'))
     {
-        $query = $this->createQuery($where);
-
-        $this->applyAllClauses($query, $orderBy, $with);
-
+        $query  = $this->createQuery($where);
+        $query  = $this->applyAllClauses($query, $orderBy, $with);
         $models = $query->paginate($perPage, $columns);
 
         $this->resetModel();
-        return $this->parserResult($models);
+        return $this->parserResults($models);
     }
 
     public function paginate($perPage = 15, $orderBy = null, $with = null, $columns = array('*'))
     {
-        $query = $this->model;
-
-        $this->applyAllClauses($query, $orderBy, $with);
-
+        $query  = $this->model;
+        $query  = $this->applyAllClauses($query, $orderBy, $with);
         $models = $query->paginate($perPage, $columns);
 
         $this->resetModel();
-        return $this->parserResult($models);
+        return $this->parserResults($models);
     }
 
     public function observe($observer)
@@ -269,12 +250,14 @@ abstract class BaseRepository implements BaseRepositoryContract
      * @param string|array $orderBy
      * @param string|array $with
      * @param int $limit
+     * @return Builder|Model|\Illuminate\Database\Query\Builder
      */
     protected function applyAllClauses($query, $orderBy = null, $with = null, $limit = null)
     {
-        $this->applyOrderBy($query, $orderBy);
-        $this->applyWith($query, $with);
-        $this->applyLimit($query, $limit);
+        $query = $this->applyOrderBy($query, $orderBy);
+        $query = $this->applyWith($query, $with);
+        $query = $this->applyLimit($query, $limit);
+        return $query;
     }
 
     /**
@@ -282,12 +265,15 @@ abstract class BaseRepository implements BaseRepositoryContract
      *
      * @param Model|Builder $query
      * @param array|string $relations
+     * @return Builder|Model
      */
     protected function applyWith($query, $relations = null)
     {
         if ($relations != null) {
-            $query->with($relations);
+            $query = $query->with($relations);
         }
+
+        return $query;
     }
 
     /**
@@ -295,12 +281,15 @@ abstract class BaseRepository implements BaseRepositoryContract
      *
      * @param \Illuminate\Database\Query\Builder|Builder $query
      * @param int $limit
+     * @return Builder|\Illuminate\Database\Query\Builder
      */
     protected function applyLimit($query, $limit = null)
     {
         if ($limit != null && is_numeric($limit)) {
-            $query->limit($limit);
+            $query = $query->limit($limit);
         }
+
+        return $query;
     }
 
     /**
@@ -308,6 +297,7 @@ abstract class BaseRepository implements BaseRepositoryContract
      *
      * @param \Illuminate\Database\Query\Builder|Builder $query
      * @param string|array $orderBy
+     * @return Builder|\Illuminate\Database\Query\Builder
      */
     protected function applyOrderBy($query, $orderBy = null)
     {
@@ -330,15 +320,18 @@ abstract class BaseRepository implements BaseRepositoryContract
                 }
 
                 if ($field != null) {
-                    $query->orderBy($field, $order);
+                    $query = $query->orderBy($field, $order);
                 }
             }
         }
+
+        return $query;
     }
 
     /**
      * @param \Illuminate\Database\Query\Builder|Builder $query
      * @param array $where
+     * @return Builder|\Illuminate\Database\Query\Builder
      * @throws RepositoryException
      */
     protected function applyWhere($query, array $where = [])
@@ -369,25 +362,27 @@ abstract class BaseRepository implements BaseRepositoryContract
             }
 
             if ($statement == 'and') {
-                $query->where($field, $operator, $value);
+                $query = $query->where($field, $operator, $value);
             }
 
             else if ($statement == 'or') {
-                $query->orWhere($field, $operator, $value);
+                $query = $query->orWhere($field, $operator, $value);
             }
 
             else if (in_array($statement, ['in', 'orIn', 'notIn', 'orNotIn'])) {
-                $query->whereIn($field, $value, $isOr ? 'or' : 'and', $isNot);
+                $query = $query->whereIn($field, $value, $isOr ? 'or' : 'and', $isNot);
             }
 
             else if (in_array($statement, ['between', 'orBetween', 'notBetween', 'orNotBetween'])) {
-                $query->whereIn($field, $value, $isOr ? 'or' : 'and', $isNot);
+                $query = $query->whereIn($field, $value, $isOr ? 'or' : 'and', $isNot);
             }
 
             else {
                 throw new RepositoryException("The statement '$statement' is not supported.'");
             }
         }
+
+        return $query;
     }
 
     /**
@@ -648,38 +643,38 @@ abstract class BaseRepository implements BaseRepositoryContract
                 list($condition, $val) = $value;
 
                 if ($condition == 'in') {
-                    $query->whereIn($field, $val);
+                    $query = $query->whereIn($field, $val);
                 } else {
-                    $query->where($field, $condition, $val);
+                    $query = $query->where($field, $condition, $val);
                 }
             } else if (is_array($value) && sizeof($value) == 3) {
                 list($field, $condition, $val) = $value;
 
                 if ($condition == 'in') {
-                    $query->whereIn($field, $val);
+                    $query = $query->whereIn($field, $val);
                 } else {
-                    $query->where($field, $condition, $val);
+                    $query = $query->where($field, $condition, $val);
                 }
             } else if (is_array($value) && sizeof($value) == 4) {
                 list($operator, $field, $condition, $val) = $value;
 
                 if ($operator == 'or') {
-                    $query->orWhere($field, $condition, $val);
+                    $query = $query->orWhere($field, $condition, $val);
                 } else if ($operator == 'and') {
-                    $query->where($field, $condition, $val);
+                    $query = $query->where($field, $condition, $val);
                 }
             } else {
-                $query->where($field, $defaultOperator, $value);
+                $query = $query->where($field, $defaultOperator, $value);
             }
         }
 
         foreach ($orderBy as $value) {
             list($field, $order) = $value;
-            $query->orderBy($field, $order);
+            $query = $query->orderBy($field, $order);
         }
 
         if ($limit != null) {
-            $query->limit($limit);
+            $query = $query->limit($limit);
         }
 
         return $query;

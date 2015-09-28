@@ -97,9 +97,11 @@ interface BaseRepositoryContract {
      * @param array $columns
      * @param array|string $orderBy
      * @param array|string $with
+     * @param int $limit
+     *
      * @return Collection
      */
-    public function all($orderBy = null, $with = null, $columns = array('*'));
+    public function all($orderBy = null, $with = null, $limit = null, $columns = array('*'));
 
     /**
      * Find data by field and value
