@@ -88,7 +88,7 @@ class BaseRepositoryTest extends Test
         $result = m::mock('\TestModel');
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
-        $query->shouldReceive('where')->with('type_id', '=', $typeId)->once();
+        $query->shouldReceive('where')->with('type_id', '=', $typeId)->once()->andReturnSelf();
         $query->shouldReceive('first')->once()->andReturn($result);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -104,7 +104,7 @@ class BaseRepositoryTest extends Test
         $result = m::mock('\TestModel');
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
-        $query->shouldReceive('where')->with('name', '=', $name)->once();
+        $query->shouldReceive('where')->with('name', '=', $name)->once()->andReturnSelf();
         $query->shouldReceive('first')->once()->andReturn($result);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -121,7 +121,7 @@ class BaseRepositoryTest extends Test
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('with')->with(['childs', 'parent'])->once()->andReturnSelf();
-        $query->shouldReceive('where')->with('name', '=', $name)->once();
+        $query->shouldReceive('where')->with('name', '=', $name)->once()->andReturnSelf();
         $query->shouldReceive('first')->once()->andReturn($result);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -138,8 +138,8 @@ class BaseRepositoryTest extends Test
         $result = m::mock('\TestModel');
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
-        $query->shouldReceive('where')->with('name', '=', $name)->once();
-        $query->shouldReceive('where')->with('description', '=', $desc)->once();
+        $query->shouldReceive('where')->with('name', '=', $name)->once()->andReturnSelf();
+        $query->shouldReceive('where')->with('description', '=', $desc)->once()->andReturnSelf();
         $query->shouldReceive('first')->once()->andReturn($result);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -157,8 +157,8 @@ class BaseRepositoryTest extends Test
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('with')->with(['childs', 'parent'])->once()->andReturnSelf();
-        $query->shouldReceive('where')->with('name', '=', $name)->once();
-        $query->shouldReceive('where')->with('description', '=', $desc)->once();
+        $query->shouldReceive('where')->with('name', '=', $name)->once()->andReturnSelf();
+        $query->shouldReceive('where')->with('description', '=', $desc)->once()->andReturnSelf();
         $query->shouldReceive('first')->once()->andReturn($result);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -175,8 +175,8 @@ class BaseRepositoryTest extends Test
         $result = m::mock('\TestModel');
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
-        $query->shouldReceive('where')->with('name', '=', $name)->once();
-        $query->shouldReceive('orWhere')->with('description', '=', $desc)->once();
+        $query->shouldReceive('where')->with('name', '=', $name)->once()->andReturnSelf();
+        $query->shouldReceive('orWhere')->with('description', '=', $desc)->once()->andReturnSelf();
         $query->shouldReceive('first')->once()->andReturn($result);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -190,8 +190,8 @@ class BaseRepositoryTest extends Test
         $results = m::mock('Illuminate\Database\Eloquent\Collection');
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
-        $query->shouldReceive('where')->with('type_id', '=', 1)->once();
-        $query->shouldReceive('orWhere')->with('type_id', '=', 2)->once();
+        $query->shouldReceive('where')->with('type_id', '=', 1)->once()->andReturnSelf();
+        $query->shouldReceive('orWhere')->with('type_id', '=', 2)->once()->andReturnSelf();
         $query->shouldReceive('get')->once()->andReturn($results);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -207,8 +207,8 @@ class BaseRepositoryTest extends Test
         $results = m::mock('Illuminate\Database\Eloquent\Collection');
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
-        $query->shouldReceive('where')->with('type', '=', $type)->once();
-        $query->shouldReceive('orderBy')->with('name', 'asc')->once();
+        $query->shouldReceive('where')->with('type', '=', $type)->once()->andReturnSelf();
+        $query->shouldReceive('orderBy')->with('name', 'asc')->once()->andReturnSelf();
         $query->shouldReceive('get')->once()->andReturn($results);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -225,7 +225,7 @@ class BaseRepositoryTest extends Test
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('with')->with(['childs'])->once()->andReturnSelf();
-        $query->shouldReceive('where')->with('type', '=', $type)->once();
+        $query->shouldReceive('where')->with('type', '=', $type)->once()->andReturnSelf();
         //$query->shouldReceive('orderBy')->with('name', 'asc')->once();
         $query->shouldReceive('get')->once()->andReturn($results);
 
@@ -242,8 +242,8 @@ class BaseRepositoryTest extends Test
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('with')->with(['childs'])->once()->andReturnSelf();
-        $query->shouldReceive('where')->with('type', '=', $type)->once();
-        $query->shouldReceive('orderBy')->with('name', 'asc')->once();
+        $query->shouldReceive('where')->with('type', '=', $type)->once()->andReturnSelf();
+        $query->shouldReceive('orderBy')->with('name', 'asc')->once()->andReturnSelf();
         $query->shouldReceive('get')->once()->andReturn($results);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -259,9 +259,9 @@ class BaseRepositoryTest extends Test
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('with')->with(['childs'])->once()->andReturnSelf();
-        $query->shouldReceive('where')->with('type', '=', $type)->once();
-        $query->shouldReceive('orderBy')->with('name', 'asc')->once();
-        $query->shouldReceive('limit')->with(10)->once();
+        $query->shouldReceive('where')->with('type', '=', $type)->once()->andReturnSelf();
+        $query->shouldReceive('orderBy')->with('name', 'asc')->once()->andReturnSelf();
+        $query->shouldReceive('limit')->with(10)->once()->andReturnSelf();
         $query->shouldReceive('get')->once()->andReturn($results);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -276,9 +276,9 @@ class BaseRepositoryTest extends Test
         $results = m::mock('Illuminate\Database\Eloquent\Collection');
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
-        $query->shouldReceive('where')->with('type', '=', $type)->once();
-        $query->shouldReceive('orderBy')->with('name', 'asc')->once();
-        $query->shouldReceive('limit')->with(20)->once();
+        $query->shouldReceive('where')->with('type', '=', $type)->once()->andReturnSelf();
+        $query->shouldReceive('orderBy')->with('name', 'asc')->once()->andReturnSelf();
+        $query->shouldReceive('limit')->with(20)->once()->andReturnSelf();
         $query->shouldReceive('get')->once()->andReturn($results);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -295,10 +295,10 @@ class BaseRepositoryTest extends Test
         $results = m::mock('Illuminate\Database\Eloquent\Collection');
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
-        $query->shouldReceive('where')->with('type', '=', $type)->once();
-        $query->shouldReceive('where')->with('flag', '=', $flag)->once();
-        $query->shouldReceive('orderBy')->with('name', 'asc')->once();
-        $query->shouldReceive('limit')->with(20)->once();
+        $query->shouldReceive('where')->with('type', '=', $type)->once()->andReturnSelf();
+        $query->shouldReceive('where')->with('flag', '=', $flag)->once()->andReturnSelf();
+        $query->shouldReceive('orderBy')->with('name', 'asc')->once()->andReturnSelf();
+        $query->shouldReceive('limit')->with(20)->once()->andReturnSelf();
         $query->shouldReceive('get')->once()->andReturn($results);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -314,9 +314,9 @@ class BaseRepositoryTest extends Test
         $results = m::mock('Illuminate\Database\Eloquent\Collection');
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
-        $query->shouldReceive('where')->with('type', '=', $type)->once();
-        $query->shouldReceive('orderBy')->with('name', 'desc')->once();
-        $query->shouldReceive('limit')->with(20)->once();
+        $query->shouldReceive('where')->with('type', '=', $type)->once()->andReturnSelf();
+        $query->shouldReceive('orderBy')->with('name', 'desc')->once()->andReturnSelf();
+        $query->shouldReceive('limit')->with(20)->once()->andReturnSelf();
         $query->shouldReceive('get')->once()->andReturn($results);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -333,10 +333,10 @@ class BaseRepositoryTest extends Test
         $results = m::mock('Illuminate\Database\Eloquent\Collection');
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
-        $query->shouldReceive('where')->with('type', '=', $type)->once();
-        $query->shouldReceive('orWhere')->with('flag', '=', $flag)->once();
-        $query->shouldReceive('orderBy')->with('name', 'asc')->once();
-        $query->shouldReceive('limit')->with(20)->once();
+        $query->shouldReceive('where')->with('type', '=', $type)->once()->andReturnSelf();
+        $query->shouldReceive('orWhere')->with('flag', '=', $flag)->once()->andReturnSelf();
+        $query->shouldReceive('orderBy')->with('name', 'asc')->once()->andReturnSelf();
+        $query->shouldReceive('limit')->with(20)->once()->andReturnSelf();
         $query->shouldReceive('get')->once()->andReturn($results);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -353,10 +353,10 @@ class BaseRepositoryTest extends Test
         $results = m::mock('Illuminate\Database\Eloquent\Collection');
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
-        $query->shouldReceive('where')->with('type', '=', $type)->once();
-        $query->shouldReceive('orWhere')->with('flag', '=', $flag)->once();
-        $query->shouldReceive('orderBy')->with('name', 'asc')->once();
-        $query->shouldReceive('limit')->with($this->repository->limit())->once();
+        $query->shouldReceive('where')->with('type', '=', $type)->once()->andReturnSelf();
+        $query->shouldReceive('orWhere')->with('flag', '=', $flag)->once()->andReturnSelf();
+        $query->shouldReceive('orderBy')->with('name', 'asc')->once()->andReturnSelf();
+        $query->shouldReceive('limit')->with($this->repository->limit())->once()->andReturnSelf();
         $query->shouldReceive('get')->once()->andReturn($results);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -380,8 +380,8 @@ class BaseRepositoryTest extends Test
         $results = m::mock('Illuminate\Database\Eloquent\Collection');
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
-        $query->shouldReceive('where')->with('type', '=', $type)->once();
-        $query->shouldReceive('orderBy')->with('name', 'desc')->once();
+        $query->shouldReceive('where')->with('type', '=', $type)->once()->andReturnSelf();
+        $query->shouldReceive('orderBy')->with('name', 'desc')->once()->andReturnSelf();
         $query->shouldReceive('paginate')->once()->with($perPage)->andReturn($results);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -397,8 +397,8 @@ class BaseRepositoryTest extends Test
         $results = m::mock('Illuminate\Database\Eloquent\Collection');
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
-        $query->shouldReceive('where')->with('type', '=', $type)->once();
-        $query->shouldReceive('orderBy')->with('name', 'desc')->once();
+        $query->shouldReceive('where')->with('type', '=', $type)->once()->andReturnSelf();
+        $query->shouldReceive('orderBy')->with('name', 'desc')->once()->andReturnSelf();
         $query->shouldReceive('paginate')->once()->with($this->repository->perPage())->andReturn($results);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);
@@ -414,7 +414,7 @@ class BaseRepositoryTest extends Test
         $results = m::mock('Illuminate\Database\Eloquent\Collection');
 
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
-        $query->shouldReceive('whereIn')->with('type_id', $types)->once();
+        $query->shouldReceive('whereIn')->with('type_id', $types)->once()->andReturnSelf();
         $query->shouldReceive('get')->once()->andReturn($results);
 
         $this->model->shouldReceive('newQuery')->once()->andReturn($query);

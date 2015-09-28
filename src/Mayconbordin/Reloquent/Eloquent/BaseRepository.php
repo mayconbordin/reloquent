@@ -301,10 +301,10 @@ abstract class BaseRepository implements BaseRepositoryContract
      */
     protected function applyOrderBy($query, $orderBy = null)
     {
-        if ($orderBy == null) return;
+        if ($orderBy == null) return $query;
 
         if (is_string($orderBy)) {
-            if (strlen($orderBy) == 0) return;
+            if (strlen($orderBy) == 0) return $query;
             $orderBy = [$orderBy];
         }
 
@@ -635,7 +635,7 @@ abstract class BaseRepository implements BaseRepositoryContract
         $query = $this->model->newQuery();
 
         if ($with != null) {
-            $query->with($with);
+            $query = $query->with($with);
         }
 
         foreach ($where as $field => $value) {
