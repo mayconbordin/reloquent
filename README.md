@@ -1,4 +1,4 @@
-# reloquent
+# <img alt="reloquent" src="https://raw.githubusercontent.com/mayconbordin/reloquent/master/artwork/logo.png" width="300">
 
 [![Build Status](https://travis-ci.org/mayconbordin/reloquent.svg?branch=master)](https://travis-ci.org/mayconbordin/reloquent)
 
