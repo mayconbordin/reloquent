@@ -5,6 +5,7 @@ use Illuminate\Support\Debug\Dumper;
 use Mayconbordin\Reloquent\Exceptions\NotFoundError;
 use Mayconbordin\Reloquent\Exceptions\RepositoryException;
 use Mayconbordin\Reloquent\Exceptions\ValidationError;
+use Mayconbordin\Reloquent\Exceptions\ServerError;
 use Mayconbordin\Reloquent\Contracts\BaseRepositoryContract;
 use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Builder;
