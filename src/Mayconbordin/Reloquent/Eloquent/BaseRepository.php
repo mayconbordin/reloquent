@@ -19,11 +19,15 @@ use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Config;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 abstract class BaseRepository implements BaseRepositoryContract
 {
     const RESULT_SINGLE = 1;
     const RESULT_ALL    = 2;
+
+    protected static $logger;
 
     /**
      * The Eloquent Model
@@ -66,6 +70,10 @@ abstract class BaseRepository implements BaseRepositoryContract
 
         $this->makeModel();
         $this->makeValidator();
+
+        if ($this->isDebug()) {
+            DB::enableQueryLog();
+        }
     }
 
     public function create(array $attributes)
@@ -437,6 +445,8 @@ abstract class BaseRepository implements BaseRepositoryContract
      */
     public function parserResult($result)
     {
+        $this->logSqlQueries();
+
         if ($result == null) {
             throw new NotFoundError($this->getMessage('not_found'));
         }
@@ -452,6 +462,8 @@ abstract class BaseRepository implements BaseRepositoryContract
      */
     public function parserResults($results)
     {
+        $this->logSqlQueries();
+
         return $results;
     }
 
@@ -803,6 +815,30 @@ abstract class BaseRepository implements BaseRepositoryContract
             default:
                 throw new RepositoryException("Method name $method is not valid.");
         }
+    }
+
+    protected function logSqlQueries()
+    {
+        if (!$this->isDebug()) return;
+
+        $queries = DB::getQueryLog();
+
+        foreach ($queries as $query) {
+            $this->getLogger()->addInfo(json_encode($query));
+        }
+    }
+
+    /**
+     * @return Logger
+     */
+    protected function getLogger()
+    {
+        if (self::$logger == null) {
+            self::$logger = new Logger('Reloquent Logs');
+            self::$logger->pushHandler(new StreamHandler(storage_path('logs/reloquent.log'), Logger::INFO));
+        }
+
+        return self::$logger;
     }
 
     protected function debug()
