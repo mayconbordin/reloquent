@@ -846,6 +846,15 @@ abstract class BaseRepository implements BaseRepositoryContract
         return self::$logger;
     }
 
+    protected function debug()
+    {
+        if (!$this->isDebug()) return;
+
+        array_map(function ($x) {
+            (new Dumper())->dump($x);
+        }, func_get_args());
+    }
+
     protected function parseFields($fieldsStr)
     {
         $items = preg_split('/(Limit|OrderByDesc|OrderBy|Paginated|With|And|Or|In)/', $fieldsStr);
