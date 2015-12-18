@@ -217,31 +217,31 @@ abstract class BaseRepository implements BaseRepositoryContract
         return $this->parserResults($models);
     }
 
-    public function findAllByFieldPaginated($field, $value = null, $operator = '=', $perPage = 15, $orderBy = null, $with = null, $columns = array('*'))
+    public function findAllByFieldPaginated($field, $value = null, $operator = '=', $perPage = null, $orderBy = null, $with = null, $columns = array('*'))
     {
         $query  = $this->model->where($field, $operator, $value);
         $query  = $this->applyAllClauses($query, $orderBy, $with);
-        $models = $query->paginate($perPage, $columns);
+        $models = $query->paginate($this->perPage($perPage), $columns);
 
         $this->resetModel();
         return $this->parserResults($models);
     }
 
-    public function findAllWherePaginated(array $where, $perPage = 15, $orderBy = null, $with = null, $columns = array('*'))
+    public function findAllWherePaginated(array $where, $perPage = null, $orderBy = null, $with = null, $columns = array('*'))
     {
         $query  = $this->createQuery($where);
         $query  = $this->applyAllClauses($query, $orderBy, $with);
-        $models = $query->paginate($perPage, $columns);
+        $models = $query->paginate($this->perPage($perPage), $columns);
 
         $this->resetModel();
         return $this->parserResults($models);
     }
 
-    public function paginate($perPage = 15, $orderBy = null, $with = null, $columns = array('*'))
+    public function paginate($perPage = null, $orderBy = null, $with = null, $columns = array('*'))
     {
         $query  = $this->model;
         $query  = $this->applyAllClauses($query, $orderBy, $with);
-        $models = $query->paginate($perPage, $columns);
+        $models = $query->paginate($this->perPage($perPage), $columns);
 
         $this->resetModel();
         return $this->parserResults($models);
@@ -497,11 +497,16 @@ abstract class BaseRepository implements BaseRepositoryContract
     }
 
     /**
+     * @param int|null $perPage
      * @return int The default number of results per page
      */
-    public function perPage()
+    public function perPage($perPage = null)
     {
-        return Config::get('reloquent.pagination.per_page', 15);
+        if (!is_int($perPage)) {
+            $perPage = Config::get('reloquent.pagination.per_page', 15);
+        }
+
+        return $perPage;
     }
 
     /**
@@ -835,19 +840,10 @@ abstract class BaseRepository implements BaseRepositoryContract
     {
         if (self::$logger == null) {
             self::$logger = new Logger('Reloquent Logs');
-            self::$logger->pushHandler(new StreamHandler(storage_path('logs/reloquent.log'), Logger::INFO));
+            self::$logger->pushHandler(new StreamHandler(Config::get('reloquent.log_file'), Logger::INFO));
         }
 
         return self::$logger;
-    }
-
-    protected function debug()
-    {
-        if (!$this->isDebug()) return;
-
-        array_map(function ($x) {
-            (new Dumper())->dump($x);
-        }, func_get_args());
     }
 
     protected function parseFields($fieldsStr)

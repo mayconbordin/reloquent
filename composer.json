@@ -13,7 +13,8 @@
         "php": ">=5.4.0",
         "illuminate/support": "5.0.x|5.1.x",
         "illuminate/database": "5.0.x|5.1.x",
-        "illuminate/validation": "5.0.x|5.1.x"
+        "illuminate/validation": "5.0.x|5.1.x",
+        "monolog/monolog": "~1.11"
     },
     "require-dev": {
       "codeception/codeception": "2.*",
