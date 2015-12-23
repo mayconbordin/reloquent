@@ -81,12 +81,12 @@ abstract class FractalPresenter implements PresenterInterface
      */
     protected function parseIncludes()
     {
-        /*$request        = $this->application->make('Illuminate\Http\Request');
+        $request        = $this->application->make('Illuminate\Http\Request');
         $paramIncludes  = Config::get('reloquent.fractal.params.include', 'include');
 
         if ($request->has($paramIncludes)) {
             $this->fractal->parseIncludes($request->get($paramIncludes));
-        }*/
+        }
 
         return $this;
     }

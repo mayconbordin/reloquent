@@ -784,6 +784,10 @@ class BaseRepositoryTest extends Test
             ->with('reloquent.fractal.serializer', \League\Fractal\Serializer\DataArraySerializer::class)
             ->andReturn(\League\Fractal\Serializer\DataArraySerializer::class);
 
+        \Illuminate\Support\Facades\Config::shouldReceive('get')
+            ->with('reloquent.fractal.params.include', 'include')
+            ->andReturn('include');
+
         $this->model->shouldReceive('transform')->andReturn([
             'id'   => (int) rand(),
             'name' => uniqid()]);
@@ -791,6 +795,10 @@ class BaseRepositoryTest extends Test
         $name = 'test';
         $results = m::mock('Illuminate\Database\Eloquent\Collection')->makePartial();
         $results->push($this->model);
+
+        $req = m::mock('Illuminate\Http\Request');
+        $req->shouldReceive('has')->withAnyArgs()->andReturn(false);
+        $this->app->shouldReceive('make')->with('Illuminate\Http\Request')->andReturn($req);
 
         $presenter = new \Mayconbordin\Reloquent\Presenter\ModelFractalPresenter($this->app);
 
@@ -804,7 +812,7 @@ class BaseRepositoryTest extends Test
         $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
 
         $r = $this->repository->findAllByField('name', $name);
-        
+
         $this->assertEquals(['data' => [$this->model->transform()]], $r);
     }
 }
