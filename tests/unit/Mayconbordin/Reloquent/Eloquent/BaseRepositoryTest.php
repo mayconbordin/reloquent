@@ -11,6 +11,8 @@ use AspectMock\Test as t;
 use Illuminate\Support\Facades\DB;
 
 class TestRepository extends BaseRepository {
+    protected $skipPresenter = false;
+
     public function model()
     {
         return 'App\Models\TestModel';
@@ -22,10 +24,18 @@ class TestRepository extends BaseRepository {
     }
 }
 
-class TestModel extends Model {
+class TestModel extends Model implements \Mayconbordin\Reloquent\Contracts\Transformable {
     public static $rules = [
         'name' => 'required'
     ];
+
+    public function transform()
+    {
+        return [
+            'id'   => (int) rand(),
+            'name' => uniqid()
+        ];
+    }
 }
 
 class BaseRepositoryTest extends Test
@@ -766,5 +776,35 @@ class BaseRepositoryTest extends Test
 
         $result = $this->repository->findWhere(['name' => ['LIKE', 't%'], 'title' => ['or', 'LIKE', 'a%']]);
         $this->assertEquals($this->model, $result);
+    }
+
+    public function testFindAllByFieldWithPresenter()
+    {
+        \Illuminate\Support\Facades\Config::shouldReceive('get')
+            ->with('reloquent.fractal.serializer', \League\Fractal\Serializer\DataArraySerializer::class)
+            ->andReturn(\League\Fractal\Serializer\DataArraySerializer::class);
+
+        $this->model->shouldReceive('transform')->andReturn([
+            'id'   => (int) rand(),
+            'name' => uniqid()]);
+
+        $name = 'test';
+        $results = m::mock('Illuminate\Database\Eloquent\Collection')->makePartial();
+        $results->push($this->model);
+
+        $presenter = new \Mayconbordin\Reloquent\Presenter\ModelFractalPresenter($this->app);
+
+        $this->app->shouldReceive('make')
+             ->with(\Mayconbordin\Reloquent\Presenter\ModelFractalPresenter::class)
+             ->andReturn($presenter);
+
+        $this->repository->setPresenter(\Mayconbordin\Reloquent\Presenter\ModelFractalPresenter::class);
+
+        $this->model->shouldReceive('where')->once()->with('name', '=', $name)->andReturnSelf();
+        $this->model->shouldReceive('get')->once()->with(['*'])->andReturn($results);
+
+        $r = $this->repository->findAllByField('name', $name);
+        
+        $this->assertEquals(['data' => [$this->model->transform()]], $r);
     }
 }

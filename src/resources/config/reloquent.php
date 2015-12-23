@@ -17,7 +17,7 @@ return [
     | Log File
     |--------------------------------------------------------------------------
     |
-    | The full path to the log file.
+    | The full path to the log file for SQL queries.
     |
     */
     'log_file' => storage_path('logs/reloquent.log'),

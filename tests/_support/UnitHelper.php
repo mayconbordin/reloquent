@@ -8,4 +8,8 @@ class UnitHelper extends \Codeception\Module
     {
         \AspectMock\Test::clean();
     }
+
+    public function seeMyVar($var){
+        $this->debug($var);
+    }
 }

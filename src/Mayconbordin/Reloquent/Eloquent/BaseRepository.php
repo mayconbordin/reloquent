@@ -1,7 +1,10 @@
 <?php namespace Mayconbordin\Reloquent\Eloquent;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Debug\Dumper;
+use Mayconbordin\Reloquent\Contracts\Presentable;
+use Mayconbordin\Reloquent\Contracts\PresenterInterface;
 use Mayconbordin\Reloquent\Exceptions\NotFoundError;
 use Mayconbordin\Reloquent\Exceptions\RepositoryException;
 use Mayconbordin\Reloquent\Exceptions\ValidationError;
@@ -22,6 +25,8 @@ use Illuminate\Support\Facades\Config;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 
+use League\Fractal\Pagination\IlluminatePaginatorAdapter;
+
 abstract class BaseRepository implements BaseRepositoryContract
 {
     const RESULT_SINGLE = 1;
@@ -37,6 +42,11 @@ abstract class BaseRepository implements BaseRepositoryContract
     protected $model;
 
     /**
+     * @var PresenterInterface
+     */
+    protected $presenter;
+
+    /**
      * The validator factory instance.
      *
      * @var Validator
@@ -49,17 +59,15 @@ abstract class BaseRepository implements BaseRepositoryContract
     protected $application;
 
     /**
-     * The models for with.
-     *
-     * @var array
-     */
-    protected $with = array();
-
-    /**
      * List of relation names, used when removing an object.
      * @var array
      */
     protected $relations = array();
+
+    /**
+     * @var bool
+     */
+    protected $skipPresenter = true;
 
     /**
      * @param Application $application
@@ -70,6 +78,7 @@ abstract class BaseRepository implements BaseRepositoryContract
 
         $this->makeModel();
         $this->makeValidator();
+        $this->makePresenter();
 
         if ($this->isDebug()) {
             DB::enableQueryLog();
@@ -93,7 +102,7 @@ abstract class BaseRepository implements BaseRepositoryContract
 
         $this->resetModel();
 
-        return $this->parserResult($model);
+        return $this->parseResult($model);
     }
 
     public function update(array $attributes, $id)
@@ -114,7 +123,7 @@ abstract class BaseRepository implements BaseRepositoryContract
 
         $this->resetModel();
 
-        return $this->parserResult($model);
+        return $this->parseResult($model);
     }
 
     public function delete($id)
@@ -163,7 +172,7 @@ abstract class BaseRepository implements BaseRepositoryContract
         }
 
         $this->resetModel();
-        return $this->parserResult($model);
+        return $this->parseResult($model);
     }
 
     public function findByField($field, $value = null, $operator = '=', $with = null, $columns = array('*'))
@@ -173,7 +182,7 @@ abstract class BaseRepository implements BaseRepositoryContract
         $model = $query->where($field, $operator, $value)->first($columns);
 
         $this->resetModel();
-        return $this->parserResult($model);
+        return $this->parseResult($model);
     }
 
     public function findWhere(array $where, $with = null, $columns = array('*'))
@@ -184,7 +193,7 @@ abstract class BaseRepository implements BaseRepositoryContract
         $model = $query->first($columns);
 
         $this->resetModel();
-        return $this->parserResult($model);
+        return $this->parseResult($model);
     }
 
     public function all($orderBy = null, $with = null, $limit = null, $columns = array('*'))
@@ -194,7 +203,7 @@ abstract class BaseRepository implements BaseRepositoryContract
         $models = $query->get($columns);
 
         $this->resetModel();
-        return $this->parserResults($models);
+        return $this->parseResult($models);
     }
 
     public function findAllByField($field, $value = null, $operator = '=', $orderBy = null, $with = null, $limit = null, $columns = array('*'))
@@ -204,7 +213,7 @@ abstract class BaseRepository implements BaseRepositoryContract
         $models = $query->get($columns);
 
         $this->resetModel();
-        return $this->parserResults($models);
+        return $this->parseResult($models);
     }
 
     public function findAllWhere(array $where, $orderBy = null, $with = null, $limit = null, $columns = array('*'))
@@ -214,7 +223,7 @@ abstract class BaseRepository implements BaseRepositoryContract
         $models = $query->get($columns);
 
         $this->resetModel();
-        return $this->parserResults($models);
+        return $this->parseResult($models);
     }
 
     public function findAllByFieldPaginated($field, $value = null, $operator = '=', $perPage = null, $orderBy = null, $with = null, $columns = array('*'))
@@ -224,7 +233,7 @@ abstract class BaseRepository implements BaseRepositoryContract
         $models = $query->paginate($this->perPage($perPage), $columns);
 
         $this->resetModel();
-        return $this->parserResults($models);
+        return $this->parseResult($models);
     }
 
     public function findAllWherePaginated(array $where, $perPage = null, $orderBy = null, $with = null, $columns = array('*'))
@@ -234,7 +243,7 @@ abstract class BaseRepository implements BaseRepositoryContract
         $models = $query->paginate($this->perPage($perPage), $columns);
 
         $this->resetModel();
-        return $this->parserResults($models);
+        return $this->parseResult($models);
     }
 
     public function paginate($perPage = null, $orderBy = null, $with = null, $columns = array('*'))
@@ -244,7 +253,7 @@ abstract class BaseRepository implements BaseRepositoryContract
         $models = $query->paginate($this->perPage($perPage), $columns);
 
         $this->resetModel();
-        return $this->parserResults($models);
+        return $this->parseResult($models);
     }
 
     public function observe($observer)
@@ -437,13 +446,13 @@ abstract class BaseRepository implements BaseRepositoryContract
     }
 
     /**
-     * Parse a single object.
+     * Parse a collection of objects.
      *
-     * @param Model|null $result
+     * @param Model|array|Paginator|Collection $result
      * @return mixed
      * @throws NotFoundError
      */
-    public function parserResult($result)
+    public function parseResult($result)
     {
         $this->logSqlQueries();
 
@@ -451,20 +460,24 @@ abstract class BaseRepository implements BaseRepositoryContract
             throw new NotFoundError($this->getMessage('not_found'));
         }
 
+        if ($this->presenter instanceof PresenterInterface) {
+            if ($result instanceof Collection || $result instanceof LengthAwarePaginator) {
+                $result->each(function($model){
+                    if ($model instanceof Presentable) {
+                        $model->setPresenter($this->presenter);
+                    }
+                    return $model;
+                });
+            } elseif ($result instanceof Presentable) {
+                $result = $result->setPresenter($this->presenter);
+            }
+
+            if (!$this->skipPresenter) {
+                return $this->presenter->present($result);
+            }
+        }
+
         return $result;
-    }
-
-    /**
-     * Parse a collection of objects.
-     *
-     * @param array|Collection|Paginator $results
-     * @return mixed
-     */
-    public function parserResults($results)
-    {
-        $this->logSqlQueries();
-
-        return $results;
     }
 
     /**
@@ -479,14 +492,52 @@ abstract class BaseRepository implements BaseRepositoryContract
     }
 
     /**
+     * Specify the class name of the Model.
+     *
      * @return string
      */
     public abstract function model();
 
     /**
+     * Specify the singular name of the model.
+     *
      * @return string
      */
     public abstract function name();
+
+    /**
+     * Specify the class name of the presenter.
+     *
+     * @return string
+     */
+    public function presenter()
+    {
+        return null;
+    }
+
+    /**
+     * Set Presenter
+     *
+     * @param $presenter
+     * @return $this
+     */
+    public function setPresenter($presenter)
+    {
+        $this->makePresenter($presenter);
+        return $this;
+    }
+
+    /**
+     * Skip Presenter Wrapper
+     *
+     * @param bool $status
+     * @return $this
+     */
+    public function skipPresenter($status = true)
+    {
+        $this->skipPresenter = $status;
+        return $this;
+    }
 
     /**
      * @return int The default limit for results
@@ -563,6 +614,28 @@ abstract class BaseRepository implements BaseRepositoryContract
     {
         $this->validator = $this->application->make('validator');
         return $this->validator;
+    }
+
+    /**
+     * @param null $presenter
+     * @return PresenterInterface
+     * @throws RepositoryException
+     */
+    public function makePresenter($presenter = null)
+    {
+        $presenter = !is_null($presenter) ? $presenter : $this->presenter();
+
+        if (!is_null($presenter)) {
+            $this->presenter = is_string($presenter) ? $this->application->make($presenter) : $presenter;
+
+            if (!$this->presenter instanceof PresenterInterface) {
+                throw new RepositoryException("Class {$presenter} must be an instance of Mayconbordin\\Reloquent\\Contractss\\PresenterInterface");
+            }
+
+            return $this->presenter;
+        }
+
+        return null;
     }
 
     /**
@@ -812,11 +885,11 @@ abstract class BaseRepository implements BaseRepositoryContract
             case 'findAllBy':
                 $results = $this->buildQuery(self::RESULT_ALL, $fields, $operators, $parameters);
                 $this->resetModel();
-                return $this->parserResult($results);
+                return $this->parseResult($results);
             case 'findBy':
                 $result = $this->buildQuery(self::RESULT_SINGLE, $fields, $operators, $parameters);
                 $this->resetModel();
-                return $this->parserResult($result);
+                return $this->parseResult($result);
             default:
                 throw new RepositoryException("Method name $method is not valid.");
         }
