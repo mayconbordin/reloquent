@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "php": ">=5.4.0",
+        "php": ">=5.5.9",
         "illuminate/support": "5.0.x|5.1.x",
         "illuminate/database": "5.0.x|5.1.x",
         "illuminate/validation": "5.0.x|5.1.x",
