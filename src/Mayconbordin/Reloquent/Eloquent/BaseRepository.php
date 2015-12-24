@@ -25,8 +25,6 @@ use Illuminate\Support\Facades\Config;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 
-use League\Fractal\Pagination\IlluminatePaginatorAdapter;
-
 abstract class BaseRepository implements BaseRepositoryContract
 {
     const RESULT_SINGLE = 1;
