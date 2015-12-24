@@ -608,6 +608,7 @@ abstract class BaseRepository implements BaseRepositoryContract
 
     /**
      * Make and get an instance of the validator.
+     *
      * @return Validator
      */
     protected function makeValidator()
@@ -617,7 +618,9 @@ abstract class BaseRepository implements BaseRepositoryContract
     }
 
     /**
-     * @param null $presenter
+     * Make and get an instance of the presenter.
+     *
+     * @param PresenterInterface|string|null $presenter
      * @return PresenterInterface
      * @throws RepositoryException
      */
@@ -721,6 +724,16 @@ abstract class BaseRepository implements BaseRepositoryContract
         $this->saveRelated($model, $related, 'Illuminate\Database\Eloquent\Relations\BelongsToMany', $action);
     }
 
+    /**
+     * Create a query on Eloquent\QueryBuilder.
+     *
+     * @param array $where
+     * @param array $orderBy
+     * @param int|null $limit
+     * @param array|null $with
+     * @param string $defaultOperator
+     * @return $this|Builder|static
+     */
     protected function createQuery(array $where, $orderBy = [], $limit = null, $with = null, $defaultOperator = '=')
     {
         $query = $this->model->newQuery();
@@ -895,6 +908,9 @@ abstract class BaseRepository implements BaseRepositoryContract
         }
     }
 
+    /**
+     * Log all executed queries into the log file.
+     */
     protected function logSqlQueries()
     {
         if (!$this->isDebug()) return;
@@ -907,6 +923,8 @@ abstract class BaseRepository implements BaseRepositoryContract
     }
 
     /**
+     * Get the SQL logger.
+     *
      * @return Logger
      */
     protected function getLogger()
@@ -919,6 +937,9 @@ abstract class BaseRepository implements BaseRepositoryContract
         return self::$logger;
     }
 
+    /**
+     * Debug dumper of variables.
+     */
     protected function debug()
     {
         if (!$this->isDebug()) return;
@@ -928,6 +949,12 @@ abstract class BaseRepository implements BaseRepositoryContract
         }, func_get_args());
     }
 
+    /**
+     * Parse and return the list of field names from the method name.
+     *
+     * @param string $fieldsStr
+     * @return array
+     */
     protected function parseFields($fieldsStr)
     {
         $items = preg_split('/(Limit|OrderByDesc|OrderBy|Paginated|With|And|Or|In)/', $fieldsStr);
