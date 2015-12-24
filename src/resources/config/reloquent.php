@@ -45,5 +45,22 @@ return [
     */
     'pagination' => [
         'per_page' => 15
-    ]
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Fractal Presenter Config
+    |--------------------------------------------------------------------------
+    |
+    | Available serializers: ArraySerializer, DataArraySerializer,
+    |                        JsonApiSerializer
+    |
+    */
+    'fractal' => [
+        'params' => [
+            'include' => 'include'
+        ],
+
+        'serializer' => League\Fractal\Serializer\DataArraySerializer::class
+    ],
 ];
