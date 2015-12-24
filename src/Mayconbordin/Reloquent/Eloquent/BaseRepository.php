@@ -30,6 +30,9 @@ abstract class BaseRepository implements BaseRepositoryContract
     const RESULT_SINGLE = 1;
     const RESULT_ALL    = 2;
 
+    /**
+     * @var Logger
+     */
     protected static $logger;
 
     /**
