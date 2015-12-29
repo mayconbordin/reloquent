@@ -117,11 +117,15 @@ abstract class BaseRepository implements BaseRepositoryContract
         $related    = $this->fetchRelatedAttributes($attributes);
         $attributes = $this->transformAttributes($attributes);
 
+        $_skipPresenter = $this->skipPresenter;
+        $this->skipPresenter(true);
+
         $model = $this->find($id);
         $model->fill($attributes);
 
         $this->saveModel($model, $related, self::ACTION_UPDATE);
 
+        $this->skipPresenter($_skipPresenter);
         $this->resetModel();
 
         return $this->parseResult($model);
@@ -129,6 +133,9 @@ abstract class BaseRepository implements BaseRepositoryContract
 
     public function delete($id)
     {
+        $_skipPresenter = $this->skipPresenter;
+        $this->skipPresenter(true);
+
         $model = $this->find($id);
 
         DB::beginTransaction();
@@ -143,6 +150,9 @@ abstract class BaseRepository implements BaseRepositoryContract
         }
 
         DB::commit();
+
+        $this->skipPresenter($_skipPresenter);
+        $this->resetModel();
     }
 
     public function destroy(array $ids)
